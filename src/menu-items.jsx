@@ -1,6 +1,78 @@
 const menuItems = {
   items: [
     {
+      id: 'menu',
+      title: 'MENU',
+      type: 'group',
+      icon: 'icon-navigation',
+      children: [
+        {
+          id: 'dashboard',
+          title: 'Bảng điều khiển',
+          type: 'item',
+          icon: 'feather icon-home',
+          url: '/app/dashboard/default'
+        },
+        {
+          id: 'category',
+          title: 'Quản lý Danh mục',
+          type: 'item',
+          icon: 'feather icon-home',
+          url: '/app/dashboard/default'
+        },
+        {
+          id: 'product',
+          title: 'Quản lý Sản phẩm',
+          type: 'item',
+          icon: 'feather icon-home',
+          url: '/app/dashboard/default'
+        },
+        {
+          id: 'order',
+          title: 'Quản lý Đơn hàng',
+          type: 'item',
+          icon: 'feather icon-home',
+          url: '/app/dashboard/default'
+        },
+        {
+          id: 'comment_rate',
+          title: 'Quản lý Bình luận',
+          type: 'item',
+          icon: 'feather icon-home',
+          url: '/app/dashboard/default'
+        },
+        {
+          id: 'contact',
+          title: 'Quản lý Liên hệ',
+          type: 'item',
+          icon: 'feather icon-home',
+          url: '/app/dashboard/default'
+        },
+        {
+          id: 'slideshow',
+          title: 'Quản lý Slideshow',
+          type: 'item',
+          icon: 'feather icon-home',
+          url: '/app/dashboard/default'
+        },
+        {
+          id: 'site_info',
+          title: 'Quản lý Thông tin Website',
+          type: 'item',
+          icon: 'feather icon-home',
+          url: '/app/dashboard/default'
+        },
+        {
+          id: 'statistic',
+          title: 'Quản lý Thống kê',
+          type: 'item',
+          icon: 'feather icon-home',
+          url: '/app/dashboard/default'
+        }
+      ]
+    },
+    // Không được sửa phía dưới, chỉ được code và sửa phía trên
+    {
       id: 'navigation',
       title: 'Navigation',
       type: 'group',
