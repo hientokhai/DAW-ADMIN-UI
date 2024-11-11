@@ -52,6 +52,11 @@ const routes = [
     routes: [
       {
         exact: 'true',
+        path: '/app/dashboard/default1',
+        element: lazy(() => import('./views/dashboard/index1'))
+      },
+      {
+        exact: 'true',
         path: '/app/dashboard/default',
         element: lazy(() => import('./views/dashboard'))
       },
