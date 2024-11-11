@@ -51,6 +51,11 @@ const routes = [
     layout: AdminLayout,
     routes: [
       {
+        exact: true,
+        path: "/app/category/category",
+        element: lazy(() => import("./views/category/category"))
+      },
+      {
         exact: 'true',
         path: '/app/dashboard/default1',
         element: lazy(() => import('./views/dashboard/index1'))

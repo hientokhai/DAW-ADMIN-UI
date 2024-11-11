@@ -18,7 +18,7 @@ const menuItems = {
           title: 'Quản lý Danh mục',
           type: 'item',
           icon: 'feather icon-home',
-          url: '/app/dashboard/default'
+          url: '/app/category/category'
         },
         {
           id: 'product',
