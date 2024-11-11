@@ -11,7 +11,7 @@ const menuItems = {
           title: 'Bảng điều khiển',
           type: 'item',
           icon: 'feather icon-home',
-          url: '/app/dashboard/default'
+          url: '/app/dashboard/default1'
         },
         {
           id: 'category',
