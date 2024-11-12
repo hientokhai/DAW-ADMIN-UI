@@ -32,7 +32,7 @@ const menuItems = {
           title: 'Quản lý Đơn hàng',
           type: 'item',
           icon: 'feather icon-home',
-          url: '/app/dashboard/default'
+          url: '/app/order/order'
         },
         {
           id: 'comment_rate',
