@@ -52,8 +52,18 @@ const routes = [
     routes: [
       {
         exact: true,
-        path: "/app/category/category",
-        element: lazy(() => import("./views/category/category"))
+        path: '/app/category/category',
+        element: lazy(() => import('./views/pages/category/category'))
+      },
+      {
+        exact: true,
+        path: '/app/order/order',
+        element: lazy(() => import('./views/pages/order/order'))
+      },
+      {
+        exact: true,
+        path: '/app/order/:orderId',
+        element: lazy(() => import('./views/pages/order/orderDetail'))
       },
       {
         exact: 'true',
