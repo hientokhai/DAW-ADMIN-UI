@@ -36,6 +36,18 @@ const routes = [
     path: '/login',
     element: lazy(() => import('./views/auth/signin/SignIn1'))
   },
+  // Đăng nhập - hien
+  {
+    exact: 'true',
+    path: '/sign-in',
+    element: lazy(() => import('./views/pages/signin/signin'))
+  },
+  // Đăng ký - hien
+  {
+    exact: 'true',
+    path: '/sign-up',
+    element: lazy(() => import('./views/pages/signup/signup'))
+  },
   {
     exact: 'true',
     path: '/auth/signin-1',
