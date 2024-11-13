@@ -93,11 +93,13 @@ const routes = [
         path: '/app/dashboard/default1',
         element: lazy(() => import('./views/dashboard/index1'))
       },
+      //////
       {
         exact: 'true',
-        path: '/app/dashboard/default',
-        element: lazy(() => import('./views/dashboard'))
+        path: '/app/products/products',
+        element: lazy(() => import('./views/pages/products/products'))
       },
+      ///////
       {
         exact: 'true',
         path: '/basic/button',

@@ -25,7 +25,7 @@ const menuItems = {
           title: 'Quản lý Sản phẩm',
           type: 'item',
           icon: 'feather icon-home',
-          url: '/app/dashboard/default'
+          url: '/app/products/products'
         },
         {
           id: 'order',
