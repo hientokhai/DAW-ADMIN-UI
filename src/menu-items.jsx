@@ -39,7 +39,7 @@ const menuItems = {
           title: 'Quản lý Bình luận',
           type: 'item',
           icon: 'feather icon-home',
-          url: '/app/dashboard/default'
+          url: '/app/comment/comment'
         },
         {
           id: 'contact',
