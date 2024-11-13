@@ -84,6 +84,11 @@ const routes = [
       },
       ///////////////
       {
+        exact: true,
+        path: '/app/comment/comment',
+        element: lazy(() => import('./views/pages/comment/comment'))
+      },
+      {
         exact: 'true',
         path: '/app/dashboard/default1',
         element: lazy(() => import('./views/dashboard/index1'))

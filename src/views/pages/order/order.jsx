@@ -223,7 +223,6 @@ const OrderPage = () => {
         </Card.Body>
       </Card>
 
-      {/* Modal for editing order status */}
       <Modal show={showModal} onHide={handleClose}>
         <Modal.Header closeButton>
           <Modal.Title>Chỉnh sửa trạng thái đơn hàng</Modal.Title>
