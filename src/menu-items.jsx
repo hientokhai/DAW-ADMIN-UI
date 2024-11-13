@@ -45,8 +45,8 @@ const menuItems = {
           id: 'contact',
           title: 'Quản lý Liên hệ',
           type: 'item',
-          icon: 'feather icon-home',
-          url: '/app/dashboard/default'
+          icon: 'feather icon-phone',
+          url: '/app/contacts/contacts'
         },
         {
           id: 'slideshow',
@@ -59,8 +59,8 @@ const menuItems = {
           id: 'site_info',
           title: 'Quản lý Thông tin Website',
           type: 'item',
-          icon: 'feather icon-home',
-          url: '/app/dashboard/default'
+          icon: 'feather icon-info',
+          url: '/app/siteinfo/siteinfo'
         },
         {
           id: 'statistic',

@@ -65,6 +65,24 @@ const routes = [
         path: '/app/order/:orderId',
         element: lazy(() => import('./views/pages/order/orderDetail'))
       },
+      //Văn Tuấn QLLH
+      {
+        exact: 'true',
+        path: '/app/contacts/contacts',
+        element: lazy(() => import('./views/pages/contacts/contacts'))
+      },
+      {
+        exact: 'true',
+        path: '/app/contacts/:contactId',
+        element: lazy(() => import('./views/pages/contacts/contactsDetail'))
+      },
+      // Văn Tuấn QLTTWS
+      {
+        exact: 'true',
+        path: '/app/siteinfo/siteinfo',
+        element: lazy(() => import('./views/pages/siteinfo/siteinfo'))
+      },
+      ///////////////
       {
         exact: 'true',
         path: '/app/dashboard/default1',
