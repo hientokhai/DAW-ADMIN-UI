@@ -1,74 +1,120 @@
 import { useState, useEffect } from 'react';
-import { Button, Card, Form, Modal, Table ,InputGroup } from 'react-bootstrap';
+import { Button, Card, Form, Modal, Table, InputGroup } from 'react-bootstrap';
+import { useNavigate } from 'react-router-dom';
 
 const ProductsPage = () => {
-    const [products, setproducts] = useState([]);
+    const [products, setProducts] = useState([]);
     const [showModal, setShowModal] = useState(false);
-    const [showAddModal, setShowAddModal] = useState(false);
-    const [currentProduct, setcurrentProduct] = useState(null);
-    const [newProduct, setNewProduct] = useState({ name: '', category: '', price: '', discription: '',status: 'Còn hàng'});
+    const [currentProduct, setCurrentProduct] = useState(null);
+    const [searchTerm, setSearchTerm] = useState("");
+    const [filteredProducts, setFilteredProducts] = useState([]);
+    const [expandedProductId, setExpandedProductId] = useState(null); // Track the expanded product
+    const navigate = useNavigate();
+
     useEffect(() => {
         fetchProducts();
     }, []);
+
+    useEffect(() => {
+        handleSearch(searchTerm);
+    }, [products, searchTerm]);
 
     const fetchProducts = () => {
         const fakeData = [
             {
                 id: 1,
                 createdAt: '11/12/2024',
+                url: 'hehe',
                 category: 'Quần',
-                name: 'Th0m Br0wne Blue Oxford 4-Bar Straight with Stripe Blue Shirt',
-                price: '600.000đ',
-                discription: '123 Đường ABC, Quận 1, TP.HCM',
+                supplier: 'Nhà cung cấp 1',
+                name: 'LEGGINGS',
+                variants: [
+                    { color: 'Đỏ', size: 'S', quantity: 30, importprice: '400.000đ', sellprice: '600.000đ' },
+                    { color: 'Đỏ', size: 'M', quantity: 50, importprice: '400.000đ', sellprice: '600.000đ' },
+                    { color: 'Xanh', size: 'L', quantity: 20, importprice: '400.000đ', sellprice: '600.000đ' },
+                ],
+                description: '123 Đường ABC, Quận 1, TP.HCM',
                 status: 'Còn hàng',
+                is_featured: 'checked',
             },
             {
                 id: 2,
-                createdAt: '10/12/2024',
+                createdAt: '11/12/2024',
+                url: 'hehe',
                 category: 'Áo',
-                name: 'Th0m Br0wne Blue Oxford 4-Bar Straight with Stripe Blue Shirt',
-                price: '300.000đ',
-                discription: '456 Đường DEF, Quận 2, TP.HCM',
+                supplier: 'Nhà cung cấp 2',
+                name: 'Áo Tank Top',
+                variants: [
+                    { color: 'Đỏ', size: 'S', quantity: 0, importprice: '400.000đ', sellprice: '600.000đ' },
+                    { color: 'Đỏ', size: 'M', quantity: 1, importprice: '400.000đ', sellprice: '600.000đ' },
+                    { color: 'Xanh', size: 'L', quantity: 2, importprice: '400.000đ', sellprice: '600.000đ' },
+                ],
+                description: '123 Đường ABC, Quận 1, TP.HCM',
                 status: 'Hết hàng',
+                is_featured: 'checked',
             },
             {
                 id: 3,
-                createdAt: '10/12/2024',
+                createdAt: '11/12/2024',
+                url: 'hehe',
                 category: 'Giày',
-                name: 'Th0m Br0wne Blue Oxford 4-Bar Straight with Stripe Blue Shirt',
-                price: '800.000đ',
-                discription: '456 Đường DEF, Quận 2, TP.HCM',
+                supplier: 'Nhà cung cấp 3',
+                name: 'Addidas',
+                variants: [
+                    { color: 'Đỏ', size: '29', quantity: 20, importprice: '400.000đ', sellprice: '600.000đ' },
+                    { color: 'Đỏ', size: '30', quantity: 5, importprice: '400.000đ', sellprice: '600.000đ' },
+                    { color: 'Xanh', size: '31', quantity: 20, importprice: '400.000đ', sellprice: '600.000đ' },
+                ],
+                description: '123 Đường ABC, Quận 1, TP.HCM',
                 status: 'Còn hàng',
+                is_featured: 'checked',
             },
+            // Các sản phẩm khác
         ];
-        setproducts(fakeData);
+        setProducts(fakeData);
+    };
+    const getProductStatus = (variants) => {
+        // Kiểm tra xem có bất kỳ biến thể nào có số lượng lớn hơn 0
+        const isAvailable = variants.some(variant => variant.quantity > 0);
+        return isAvailable ? "Còn hàng" : "Hết hàng";
     };
 
-    const handleEditproduct = (product) => {
-        setcurrentProduct(product);
-        setShowModal(true);
-    };
-
-    const handleAddProduct = () => {
-      setShowAddModal(true);
-    };
-
-    const handleClose = () => {
-        setShowModal(false);
-        setcurrentProduct(null);
-    };
-
-    const handleInputChange = (e) => {
-        const { name, value } = e.target;
-        if (currentProduct) {
-            setcurrentProduct({ ...currentProduct, [name]: value });
+    const handleSearch = (term) => {
+        setSearchTerm(term);
+        if (term.trim() === "") {
+            setFilteredProducts(products);
+        } else {
+            const filtered = products.filter((product) =>
+                product.name.toLowerCase().includes(term.toLowerCase())
+            );
+            setFilteredProducts(filtered);
         }
     };
 
-    const handleSaveproductChange = () => {
+    // Hiển thị modal chỉnh sửa khi nhấn vào nút "Cập nhật"
+    const handleEditProduct = (product) => {
+        setCurrentProduct(product);
+        setShowModal(true);
+    };
+
+    // Xử lý đóng modal
+    const handleClose = () => {
+        setShowModal(false);
+        setCurrentProduct(null);
+    };
+
+    // Xử lý khi người dùng thay đổi thông tin sản phẩm trong modal
+    const handleInputChange = (e) => {
+        const { name, value } = e.target;
         if (currentProduct) {
-            setproducts((prevproducts) =>
-                prevproducts.map((product) =>
+            setCurrentProduct({ ...currentProduct, [name]: value });
+        }
+    };
+
+    const handleSaveProductChange = () => {
+        if (currentProduct) {
+            setProducts((prevProducts) =>
+                prevProducts.map((product) =>
                     product.id === currentProduct.id ? { ...product, ...currentProduct } : product
                 )
             );
@@ -76,28 +122,32 @@ const ProductsPage = () => {
         handleClose();
         alert('Thông tin sản phẩm đã được cập nhật!');
     };
-    const handleCloseAdd = () => {
-      setShowAddModal(false);
-      setNewProduct({ name: '', category: '', price: '', discription: '',status: 'Còn hàng'})
+
+    // Điều hướng sang trang thêm sản phẩm mới
+    const handleAddProduct = () => {
+        navigate(`/app/products/addproducts`);
     };
-    const handleAddproduct = () => {
-      const newId = products.length > 0 ? Math.max(products.map((c) => c.id)) + 1 : 1;
-      setproducts([...products, { id: newId, ...newProduct}]);
-      handleClose();
-      alert('Thông tin sản phẩm đã được thêm mới!');
-  };
+
+    const toggleExpandProduct = (productId) => {
+        if (expandedProductId === productId) {
+            setExpandedProductId(null);
+        } else {
+            setExpandedProductId(productId);
+        }
+    };
+
     return (
         <>
-        <InputGroup className="mb-3">
-        <Button variant="dark" id="button-addon1">
-          Tìm kiếm
-        </Button>
-        <Form.Control
-          aria-label="Example text with button addon"
-          aria-describedby="basic-addon1"
-          placeholder="Nhập vào từ khóa tìm kiếm"
-        />
-      </InputGroup>
+            <InputGroup className="mb-3">
+                <Button variant="dark" id="button-addon1" onClick={() => handleSearch(searchTerm)}>
+                    Tìm kiếm
+                </Button>
+                <Form.Control
+                    placeholder="Nhập vào từ khóa tìm kiếm"
+                    value={searchTerm}
+                    onChange={(e) => handleSearch(e.target.value)}
+                />
+            </InputGroup>
 
             <Card>
                 <Card.Header>
@@ -109,57 +159,87 @@ const ProductsPage = () => {
                             <tr>
                                 <th>#</th>
                                 <th>Ngày nhập</th>
+                                <th>Hình ảnh</th>
+                                <th>Nhà cung cấp</th>
                                 <th>Loại sản phẩm</th>
                                 <th>Tên sản phẩm</th>
-                                <th>Tổng giá trị</th>
                                 <th>Thông tin sản phẩm</th>
+                                <th>Trạng thái</th>
                                 <th>Thao tác</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {products.length > 0 ? (
-                                products.map((product, index) => (
-                                    <tr key={product.id}>
-                                        <th scope="row">{index + 1}</th>
-                                        <td>{product.createdAt}</td>
-                                        <td>{product.category}</td>
-                                        <td>{product.name}</td>
-                                        <td>{product.price}</td>
-                                        <td>{product.discription}</td>
-                                        <td>
-                                            <span
-                                                style={{
-                                                    color: product.status === 'Còn hàng' ? 'green' : 'red',
-                                                    fontWeight: 'bold'
-                                                }}
+                            {filteredProducts.length > 0 ? (
+                                filteredProducts.map((product, index) => (
+                                    <>
+                                        <tr key={product.id}>
+                                            <td>{index + 1}</td>
+                                            <td>{product.createdAt}</td>
+                                            <td>{product.url}</td>
+                                            <td>{product.supplier}</td>
+                                            <td>{product.category}</td>
+                                            <td
+                                                style={{ cursor: 'pointer', color: 'blue' }}
+                                                onClick={() => toggleExpandProduct(product.id)}
                                             >
-                                                {product.status}
-                                            </span>
-                                        </td>
+                                                {product.name}
+                                            </td>
+                                            <td>{product.description}</td>
+                                            <td style={{ color: getProductStatus(product.variants) === "Còn hàng" ? 'green' : 'red', fontWeight: 'bold' }}>
+                                            {getProductStatus(product.variants)}
+                                            </td>
+                                            <td>
+                                                <Button variant="info" onClick={() => handleEditProduct(product)}>
+                                                    Cập Nhật
+                                                </Button>
+                                            </td>
+                                        </tr>
 
-                                        <td>
-                                            <Button variant="info" onClick={() => handleEditproduct(product)}>
-                                                Cập Nhật
-                                            </Button>
-                                        </td>
-                                    </tr>
+                                        {/* Table for product variants - shown when product name is clicked */}
+                                        {expandedProductId === product.id && (
+                                            <tr>
+                                                <td colSpan="8">
+                                                    <Table bordered>
+                                                        <thead>
+                                                            <tr>
+                                                                <th>Màu sắc</th>
+                                                                <th>Kích cỡ</th>
+                                                                <th>Số lượng</th>
+                                                                <th>Giá nhập</th>
+                                                                <th>Giá bán</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            {product.variants.map((variant, idx) => (
+                                                                <tr key={idx}>
+                                                                    <td>{variant.color}</td>
+                                                                    <td>{variant.size}</td>
+                                                                    <td>{variant.quantity}</td>
+                                                                    <td>{variant.importprice}</td>
+                                                                    <td>{variant.sellprice}</td>
+                                                                </tr>
+                                                            ))}
+                                                        </tbody>
+                                                    </Table>
+                                                </td>
+                                            </tr>
+                                        )}
+                                    </>
                                 ))
                             ) : (
                                 <tr>
-                                    <td colSpan="9" className="text-center">
-                                        Không có sản phẩm
-                                    </td>
+                                    <td colSpan="8" className="text-center">Không có sản phẩm</td>
                                 </tr>
                             )}
                         </tbody>
                     </Table>
                 </Card.Body>
             </Card>
-            <Button variant="warning" onClick={() => handleAddProduct()}>
-                                                    Thêm sản phẩm
+            <Button variant="warning" onClick={handleAddProduct} className="mt-3">
+                Thêm sản phẩm
             </Button>
 
-            {/* Modal chỉnh sửa thông tin liên hệ */}
+            {/* Modal chỉnh sửa thông tin sản phẩm */}
             <Modal show={showModal} onHide={handleClose}>
                 <Modal.Header closeButton>
                     <Modal.Title>Chỉnh sửa thông tin sản phẩm</Modal.Title>
@@ -167,48 +247,51 @@ const ProductsPage = () => {
                 <Modal.Body>
                     {currentProduct && (
                         <Form>
-                            <Form.Group controlId="category">
-                                <Form.Label>Loại sản phẩm</Form.Label>
+                            <Form.Group controlId="supplier">
+                                <Form.Label>Nhà cung cấp</Form.Label>
                                 <Form.Control
                                     type="text"
-                                    name="category"
-                                    value={currentProduct.category}
-                                    readOnly
-                                />
-                            </Form.Group>
-                            <Form.Group controlId="name">
-                                <Form.Label>Tên sản phẩm</Form.Label>
-                                <Form.Control
-                                    type="text"
-                                    name="name"
-                                    value={currentProduct.name}
+                                    name="supplier"
+                                    value={currentProduct.supplier}
                                     onChange={handleInputChange}
                                 />
                             </Form.Group>
-                            <Form.Group controlId="price">
-                                <Form.Label>Giá</Form.Label>
-                                <Form.Control
-                                    type="text"
-                                    name="price"
-                                    value={currentProduct.price}
-                                    onChange={handleInputChange}
-                                />
-                            </Form.Group>
-                            <Form.Group controlId="discription">
+                            {/* Hiển thị các biến thể sản phẩm */}
+                            {currentProduct.variants.map((variant, index) => (
+                                <div key={index} style={{ borderBottom: '1px solid #ddd', paddingBottom: '10px', marginBottom: '10px' }}>
+                                    <Form.Group controlId={`color-${index}`}>
+                                        <Form.Label>Màu sắc</Form.Label>
+                                        <Form.Control
+                                            type="text"
+                                            value={variant.color}
+                                            onChange={(e) => handleInputChange(e, index, 'color')}
+                                        />
+                                    </Form.Group>
+                                    <Form.Group controlId={`size-${index}`}>
+                                        <Form.Label>Kích cỡ</Form.Label>
+                                        <Form.Control
+                                            type="text"
+                                            value={variant.size}
+                                            onChange={(e) => handleInputChange(e, index, 'size')}
+                                        />
+                                    </Form.Group>
+                                    <Form.Group controlId={`quantity-${index}`}>
+                                        <Form.Label>Số lượng</Form.Label>
+                                        <Form.Control
+                                            type="number"
+                                            value={variant.quantity}
+                                            onChange={(e) => handleInputChange(e, index, 'quantity')}
+                                        />
+                                    </Form.Group>
+                                </div>
+                            ))}
+                                <Form.Group controlId="description">
                                 <Form.Label>Thông tin sản phẩm</Form.Label>
                                 <Form.Control
                                     type="text"
-                                    name="discription"
-                                    value={currentProduct.discription}
+                                    name="description"
+                                    value={currentProduct.description}
                                     onChange={handleInputChange}
-                                />
-                            </Form.Group>
-                            <Form.Group controlId="status">
-                                <Form.Label>Trạng thái</Form.Label>
-                                <Form.Control
-                                    type="text"
-                                    value={currentProduct.status}
-                                    readOnly
                                 />
                             </Form.Group>
                         </Form>
@@ -218,63 +301,8 @@ const ProductsPage = () => {
                     <Button variant="secondary" onClick={handleClose}>
                         Đóng
                     </Button>
-                    <Button variant="primary" onClick={handleSaveproductChange}>
+                    <Button variant="primary" onClick={handleSaveProductChange}>
                         Lưu thay đổi
-                    </Button>
-                </Modal.Footer>
-            </Modal>
-
-            <Modal show={showAddModal} onHide={handleCloseAdd}>
-                <Modal.Header closeButton>
-                    <Modal.Title>Thêm sản phẩm mới</Modal.Title>
-                </Modal.Header>
-                <Modal.Body>
-                <Form>
-                <Form.Group controlId="formNewProductName">
-                <Form.Label>Tên sản phẩm</Form.Label>
-                <Form.Control
-                type="text" 
-                value={newProduct.name}
-                onChange={(e) => setNewProduct({ ...newProduct, name: e.target.value })}
-                placeholder="Nhập tên sản phẩm" />
-                </Form.Group>
-                <Form.Group controlId="formNewProductCategory">
-                <Form.Label>Loại sản phẩm</Form.Label>
-                <Form.Select as="select"
-                value={newProduct.category}
-                onChange={(e) => setNewProduct({ ...newProduct, category: e.target.value })}
-              >
-                <option value="">Chọn loại sản phẩm</option>
-                {products.map((producted) => (
-                  <option key={producted.id} value={producted.id}>
-                    {producted.category}
-                  </option>
-                ))}
-                </Form.Select>
-                </Form.Group>
-                <Form.Group controlId="formNewProductPrice">
-                <Form.Label>Giá</Form.Label>
-                <Form.Control
-                type="text" 
-                value={newProduct.price}
-                onChange={(e) => setNewProduct({ ...newProduct, price: e.target.value })}
-                placeholder="Nhập giá sản phẩm" />
-                </Form.Group>
-                <Form.Group controlId="formNewProductDiscription">
-                <Form.Label>Thông tin</Form.Label>
-                <Form.Control as="textarea" rows={3} 
-                value={newProduct.discription}
-                onChange={(e) => setNewProduct({ ...newProduct, discription: e.target.value })}
-                placeholder="Nhập thông tin sản phẩm" />
-                </Form.Group>
-                </Form>
-                </Modal.Body>
-                <Modal.Footer>
-                    <Button variant="secondary" onClick={handleCloseAdd}>
-                        Đóng
-                    </Button>
-                    <Button variant="primary" onClick={handleAddproduct}>
-                        Thêm
                     </Button>
                 </Modal.Footer>
             </Modal>
