@@ -53,7 +53,7 @@ const menuItems = {
           title: 'Quản lý Slideshow',
           type: 'item',
           icon: 'feather icon-home',
-          url: '/app/dashboard/default'
+          url: '/app/slideshow/slideshow'
         },
         {
           id: 'site_info',
