@@ -64,6 +64,11 @@ const routes = [
     routes: [
       {
         exact: true,
+        path: '/app/slideshow/slideshow',
+        element: lazy(() => import('./views/pages/slideshow/slideshow'))
+      },
+      {
+        exact: true,
         path: '/app/category/category',
         element: lazy(() => import('./views/pages/category/category'))
       },

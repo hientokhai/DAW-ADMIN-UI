@@ -3,15 +3,15 @@ import { Modal, Button, Table, Form } from 'react-bootstrap';
 
 const CategoryManagement = () => {
   const [categories, setCategories] = useState([
-    { id: 1, name: 'Danh mục 1', parent: 'Không có' },
-    { id: 2, name: 'Danh mục 2', parent: 'Danh mục 1' },
-    { id: 3, name: 'Danh mục 3', parent: 'Không có' }
+    { id: 1, name: 'Danh mục 1', parent: null },
+    { id: 2, name: 'Danh mục 2', parent: 1 },
+    { id: 3, name: 'Danh mục 3', parent: null }
   ]);
 
   const [showModal, setShowModal] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
   const [currentCategory, setCurrentCategory] = useState(null);
-  const [newCategory, setNewCategory] = useState({ name: '', parent: 'Không có' });
+  const [newCategory, setNewCategory] = useState({ name: '', parent: null });
 
   const handleShow = (category) => {
     setCurrentCategory(category);
@@ -29,7 +29,7 @@ const CategoryManagement = () => {
 
   const handleCloseAdd = () => {
     setShowAddModal(false);
-    setNewCategory({ name: '', parent: 'Không có' });
+    setNewCategory({ name: '', parent: null });
   };
 
   const handleDelete = (id) => {
@@ -37,7 +37,9 @@ const CategoryManagement = () => {
   };
 
   const handleSave = () => {
-    const updatedCategories = categories.map((category) => (category.id === currentCategory.id ? currentCategory : category));
+    const updatedCategories = categories.map((category) =>
+      category.id === currentCategory.id ? currentCategory : category
+    );
     setCategories(updatedCategories);
     handleClose();
   };
@@ -46,6 +48,17 @@ const CategoryManagement = () => {
     const newId = categories.length > 0 ? Math.max(categories.map((c) => c.id)) + 1 : 1;
     setCategories([...categories, { id: newId, ...newCategory }]);
     handleCloseAdd();
+  };
+
+  const handleParentChange = (id, parentId) => {
+    setCategories(categories.map((category) =>
+      category.id === id ? { ...category, parent: parentId } : category
+    ));
+  };
+
+  const getParentName = (parentId) => {
+    const parentCategory = categories.find(category => category.id === parentId);
+    return parentCategory ? parentCategory.name : 'Không có';
   };
 
   return (
@@ -68,16 +81,7 @@ const CategoryManagement = () => {
             <tr key={category.id}>
               <td>{category.id}</td>
               <td>{category.name}</td>
-              <td>
-                <select value={category.parent} onChange={(e) => handleParentChange(category.id, e.target.value)}>
-                  <option value="">Chọn danh mục cha</option>
-                  {categories.map((parent) => (
-                    <option key={parent.id} value={parent.id}>
-                      {parent.name}
-                    </option>
-                  ))}
-                </select>
-              </td>
+              <td>{getParentName(category.parent)}</td>
               <td>
                 <Button variant="warning" onClick={() => handleShow(category)}>
                   Sửa
@@ -110,8 +114,8 @@ const CategoryManagement = () => {
                 <Form.Label>Danh mục cha</Form.Label>
                 <Form.Control
                   as="select"
-                  value={currentCategory.parent}
-                  onChange={(e) => setCurrentCategory({ ...currentCategory, parent: e.target.value })}
+                  value={currentCategory.parent || ''}
+                  onChange={(e) => setCurrentCategory({ ...currentCategory, parent: parseInt(e.target.value) || null })}
                 >
                   <option value="">Chọn danh mục cha</option>
                   {categories.map((parent) => (
@@ -120,7 +124,7 @@ const CategoryManagement = () => {
                     </option>
                   ))}
                 </Form.Control>
-              </Form.Group>
+              </ Form.Group>
             </Form>
           )}
         </Modal.Body>
@@ -152,8 +156,8 @@ const CategoryManagement = () => {
               <Form.Label>Danh mục cha</Form.Label>
               <Form.Control
                 as="select"
-                value={newCategory.parent}
-                onChange={(e) => setNewCategory({ ...newCategory, parent: e.target.value })}
+                value={newCategory.parent || ''}
+                onChange={(e) => setNewCategory({ ...newCategory, parent: parseInt(e.target.value) || null })}
               >
                 <option value="">Chọn danh mục cha</option>
                 {categories.map((parent) => (
