@@ -5,6 +5,7 @@ const ContactsPage = () => {
     const [contacts, setContacts] = useState([]);
     const [showModal, setShowModal] = useState(false);
     const [showResponseModal, setShowResponseModal] = useState(false); // Modal phản hồi
+    const [showDeleteModal, setShowDeleteModal] = useState(false); // Modal xác nhận xóa
     const [currentContact, setCurrentContact] = useState(null);
 
     useEffect(() => {
@@ -66,7 +67,24 @@ const ContactsPage = () => {
     const handleClose = () => {
         setShowModal(false);
         setShowResponseModal(false);
+        setShowDeleteModal(false);
         setCurrentContact(null);
+    };
+
+    const handleDeleteContact = (contactId) => {
+        // Hiển thị modal xác nhận xóa
+        setShowDeleteModal(true);
+        setCurrentContact(contacts.find(contact => contact.id === contactId));
+    };
+
+    const confirmDelete = () => {
+        setContacts(contacts.filter(contact => contact.id !== currentContact.id));
+        handleClose();
+        alert('Liên hệ đã được xóa!');
+    };
+
+    const cancelDelete = () => {
+        handleClose();
     };
 
     const handleInputChange = (e) => {
@@ -146,7 +164,6 @@ const ContactsPage = () => {
                                                 {contact.status}
                                             </span>
                                         </td>
-
                                         <td>
                                             <Button variant="info" onClick={() => handleEditContact(contact)}>
                                                 Cập Nhật
@@ -156,7 +173,7 @@ const ContactsPage = () => {
                                                     Phản hồi
                                                 </Button>
                                             )}{' '}
-                                            <Button variant="danger">
+                                            <Button variant="danger" onClick={() => handleDeleteContact(contact.id)}>
                                                 Xóa
                                             </Button>
                                         </td>
@@ -257,13 +274,12 @@ const ContactsPage = () => {
                                 />
                             </Form.Group>
                             <Form.Group controlId="response">
-                                <Form.Label>Phản hồi</Form.Label>
+                                <Form.Label>Phản hồi của bạn</Form.Label>
                                 <Form.Control
                                     as="textarea"
                                     name="response"
-                                    value={currentContact.response || ''}
+                                    value={currentContact.response}
                                     onChange={handleInputChange}
-                                    placeholder="Nhập phản hồi ở đây..."
                                 />
                             </Form.Group>
                         </Form>
@@ -275,6 +291,24 @@ const ContactsPage = () => {
                     </Button>
                     <Button variant="primary" onClick={handleSaveResponse}>
                         Lưu phản hồi
+                    </Button>
+                </Modal.Footer>
+            </Modal>
+
+            {/* Modal xác nhận xóa */}
+            <Modal show={showDeleteModal} onHide={handleClose}>
+                <Modal.Header closeButton>
+                    <Modal.Title>Xác nhận xóa</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    <p>Bạn có chắc chắn muốn xóa liên hệ này không?</p>
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={cancelDelete}>
+                        Hủy
+                    </Button>
+                    <Button variant="danger" onClick={confirmDelete}>
+                        Xóa
                     </Button>
                 </Modal.Footer>
             </Modal>
