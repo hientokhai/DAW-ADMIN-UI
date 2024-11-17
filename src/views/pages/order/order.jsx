@@ -1,3 +1,4 @@
+import OrderApi from 'api/orderApi';
 import { formatCurrency } from 'formatCurrency';
 import { useState, useEffect } from 'react';
 import { Button, Card, Form, Modal, Table } from 'react-bootstrap';
@@ -10,51 +11,64 @@ const OrderPage = () => {
 
   const navigate = useNavigate();
 
-  useEffect(() => {
-    fetchOrders();
-  }, []);
+  // useEffect(() => {
+  //   fetchOrders();
+  // }, []);
 
-  const fetchOrders = () => {
-    const fakeData = [
-      {
-        id: 1,
-        createdAt: '11/12/2024',
-        customer: 'Khải Hiên',
-        totalAmount: '525000',
-        paymentMethod: 'VNPay',
-        paymentStatus: 'Đã thanh toán',
-        orderStatus: 'Chờ xác nhận'
-      },
-      {
-        id: 2,
-        createdAt: '10/12/2024',
-        customer: 'Nguyễn Văn A',
-        totalAmount: '730000',
-        paymentMethod: 'COD',
-        paymentStatus: 'Chưa thanh toán',
-        orderStatus: 'Đang vận chuyển'
-      },
-      {
-        id: 3,
-        createdAt: '10/12/2024',
-        customer: 'Nguyễn Văn B',
-        totalAmount: '730000',
-        paymentMethod: 'COD',
-        paymentStatus: 'Đã thanh toán',
-        orderStatus: 'Hoàn thành'
-      },
-      {
-        id: 4,
-        createdAt: '10/12/2024',
-        customer: 'Nguyễn Văn C',
-        totalAmount: '730000',
-        paymentMethod: 'COD',
-        paymentStatus: 'Chưa thanh toán',
-        orderStatus: 'Đã hủy'
-      }
-    ];
-    setOrders(fakeData);
+  // const fetchOrders = () => {
+  //   const fakeData = [
+  //     {
+  //       id: 1,
+  //       createdAt: '11/12/2024',
+  //       customer: 'Khải Hiên',
+  //       totalAmount: '525000',
+  //       paymentMethod: 'VNPay',
+  //       paymentStatus: 'Đã thanh toán',
+  //       orderStatus: 'Chờ xác nhận'
+  //     },
+  //     {
+  //       id: 2,
+  //       createdAt: '10/12/2024',
+  //       customer: 'Nguyễn Văn A',
+  //       totalAmount: '730000',
+  //       paymentMethod: 'COD',
+  //       paymentStatus: 'Chưa thanh toán',
+  //       orderStatus: 'Đang vận chuyển'
+  //     },
+  //     {
+  //       id: 3,
+  //       createdAt: '10/12/2024',
+  //       customer: 'Nguyễn Văn B',
+  //       totalAmount: '730000',
+  //       paymentMethod: 'COD',
+  //       paymentStatus: 'Đã thanh toán',
+  //       orderStatus: 'Hoàn thành'
+  //     },
+  //     {
+  //       id: 4,
+  //       createdAt: '10/12/2024',
+  //       customer: 'Nguyễn Văn C',
+  //       totalAmount: '730000',
+  //       paymentMethod: 'COD',
+  //       paymentStatus: 'Chưa thanh toán',
+  //       orderStatus: 'Đã hủy'
+  //     }
+  //   ];
+  //   setOrders(fakeData);
+  // };
+
+  const fetchOrderList = async () => {
+    try {
+      const response = await OrderApi.getAll();
+      setOrders(response.data);
+    } catch (error) {
+      console.log('fail', error);
+    }
   };
+
+  useEffect(() => {
+    fetchOrderList();
+  }, []);
 
   const handleEditOrderStatus = (order) => {
     setCurrentOrder(order);
@@ -97,7 +111,7 @@ const OrderPage = () => {
 
   const getStatusStyle = (status) => {
     switch (status) {
-      case 'Chờ xác nhận':
+      case 'Chờ xử lý':
         return {
           border: '3px solid #86857E',
           color: '#86857E',
@@ -115,7 +129,7 @@ const OrderPage = () => {
           textAlign: 'center',
           padding: '5px'
         };
-      case 'Hoàn thành':
+      case 'Đã giao':
         return {
           border: '3px solid #28A745',
           color: '#28A745',
@@ -188,15 +202,35 @@ const OrderPage = () => {
                 orders.map((order, index) => (
                   <tr key={order.id}>
                     <th scope="row">{index + 1}</th>
-                    <td>{order.createdAt}</td>
-                    <td>{order.customer}</td>
-                    <td style={{ fontWeight: 'bold' }}>{formatCurrency(order.totalAmount)}</td>
-                    <td>{order.paymentMethod}</td>
+                    <td>{order.created_at}</td>
+                    <td>{order.customer_name}</td>
+                    <td style={{ fontWeight: 'bold' }}>{formatCurrency(order.total_order_price)}</td>
+                    <td>{order.payment_method === 1 ? 'COD' : 'VNPay'}</td>
                     <td>
-                      <p style={getStatusStyle(order.paymentStatus)}>{order.paymentStatus}</p>
+                      <p style={getStatusStyle(order.payment_status === 1 ? 'Đã thanh toán' : 'Chưa thanh toán')}>
+                        {order.payment_status === 1 ? 'Đã thanh toán' : 'Chưa thanh toán'}
+                      </p>
                     </td>
                     <td>
-                      <p style={getStatusStyle(order.orderStatus)}>{order.orderStatus}</p>
+                      <p
+                        style={getStatusStyle(
+                          order.order_status === 1
+                            ? 'Chờ xử lý'
+                            : order.order_status === 2
+                              ? 'Đang vận chuyển'
+                              : order.order_status === 3
+                                ? 'Đã giao'
+                                : 'Đã hủy'
+                        )}
+                      >
+                        {order.order_status === 1
+                          ? 'Chờ xử lý'
+                          : order.order_status === 2
+                            ? 'Đang vận chuyển'
+                            : order.order_status === 3
+                              ? 'Đã giao'
+                              : 'Đã hủy'}
+                      </p>
                     </td>
                     <td>
                       <Button variant="info" onClick={() => handleViewDetails(order.id)}>
@@ -233,12 +267,12 @@ const OrderPage = () => {
               <Form.Group controlId="orderStatus">
                 <Form.Label>Trạng thái đơn hàng</Form.Label>
                 <Form.Control as="select" value={currentOrder.orderStatus} onChange={handleStatusChange}>
-                  <option disabled value="Chờ xác nhận">
-                    Chờ xác nhận
+                  <option disabled value="Chờ xử lý">
+                    Chờ xử lý
                   </option>
                   <option value="Đang vận chuyển">Bàn giao vận chuyển</option>
-                  <option value="Hoàn thành">Giao thành công</option>
-                  <option value="Đã hủy">Hủy đơn</option>
+                  <option value="Đã giao">Giao thành công</option>
+                  <option value="Đã hủy">Hủy đơn hàng</option>
                 </Form.Control>
               </Form.Group>
             </Form>
