@@ -1,17 +1,59 @@
-import React, { useState } from 'react';
-import { Modal, Button, Table, Form } from 'react-bootstrap';
+import React, { useEffect, useState } from 'react';
+import { Modal, Button, Table, Form, Toast } from 'react-bootstrap';
+import CategoryApi from 'api/CategoryApi';
+
+// Hàm để chuyển đổi tên thành slug
+const generateSlug = (name) => {
+  const accentsMap = {
+    à: 'a', á: 'a', ả: 'a', ã: 'a', ạ: 'a',
+    â: 'a', ầ: 'a', ấ: 'a', ẩ: 'a', ẫ: 'a', ậ: 'a',
+    è: 'e', é: 'e', ẻ: 'e', ẽ: 'e', ẹ: 'e',
+    ê: 'e', ề: 'e', ế: 'e', ể: 'e', ễ: 'e', ệ: 'e',
+    ì: 'i', í: 'i', ỉ: 'i', ĩ: 'i', ị: 'i',
+    ò: 'o', ó: 'o', ỏ: 'o', õ: 'o', ọ: 'o',
+    ô: 'o', ồ: 'o', ố: 'o', ổ: 'o', ỗ: 'o', ộ: 'o',
+    ù: 'u', ú: 'u', ủ: 'u', ũ: 'u', ụ: 'u',
+    ư: 'u', ừ: 'u', ứ: 'u', ử: 'u', ữ: 'u', ự: 'u',
+    ý: 'y', ỳ: 'y', ỷ: 'y', ỹ: 'y', ỵ: 'y',
+    Đ: 'D', đ: 'd'
+  };
+
+  // Thay thế các ký tự có dấu bằng ký tự không dấu
+  const normalized = name.split('').map(char => accentsMap[char] || char).join('');
+
+  return normalized
+    .toLowerCase()
+    .replace(/\s+/g, '-') // Thay thế khoảng trắng (bao gồm nhiều khoảng trắng) bằng dấu gạch ngang
+    .replace(/[^\w-]+/g, '') // Xóa các ký tự không hợp lệ
+    .replace(/-+/g, '-'); // Xóa các dấu gạch ngang liên tiếp
+};
 
 const CategoryManagement = () => {
-  const [categories, setCategories] = useState([
-    { id: 1, name: 'Danh mục 1', parent: null },
-    { id: 2, name: 'Danh mục 2', parent: 1 },
-    { id: 3, name: 'Danh mục 3', parent: null }
-  ]);
-
+  const [categories, setCategories] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
   const [currentCategory, setCurrentCategory] = useState(null);
-  const [newCategory, setNewCategory] = useState({ name: '', parent: null });
+  const [newCategory, setNewCategory] = useState({ name: '', slug: '', parent_id: null });
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
+  const [toastType, setToastType] = useState('success'); // 'success' hoặc 'error'
+  const [searchTerm, setSearchTerm] = useState(''); // State cho tìm kiếm
+
+  // Fetch categories from API
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await CategoryApi.getAll();
+        setCategories(response.data);
+      } catch (error) {
+        setToastMessage('Lỗi khi lấy danh mục.');
+        setToastType('error');
+        setShowToast(true);
+      }
+    };
+
+    fetchCategories();
+  }, []);
 
   const handleShow = (category) => {
     setCurrentCategory(category);
@@ -29,141 +71,180 @@ const CategoryManagement = () => {
 
   const handleCloseAdd = () => {
     setShowAddModal(false);
-    setNewCategory({ name: '', parent: null });
+    setNewCategory({ name: '', slug: '', parent_id: null });
   };
 
-  const handleDelete = (id) => {
-    setCategories(categories.filter((category) => category.id !== id));
+  const handleDelete = async (id) => {
+    try {
+      await CategoryApi.delete(id); // Gọi API để xóa danh mục
+      setCategories(categories.filter((category) => category.id !== id));
+      setToastMessage('Xóa danh mục thành công!');
+      setToastType('success');
+      setShowToast(true);
+    } catch (error) {
+      setToastMessage('Có lỗi xảy ra khi xóa danh mục.');
+      setToastType('error');
+      setShowToast(true);
+    }
   };
 
-  const handleSave = () => {
-    const updatedCategories = categories.map((category) =>
-      category.id === currentCategory.id ? currentCategory : category
-    );
-    setCategories(updatedCategories);
-    handleClose();
+  const handleSave = async () => {
+    try {
+      await CategoryApi.update(currentCategory.id, currentCategory); // Gọi API để cập nhật danh mục
+      const updatedCategories = categories.map((category) =>
+        category.id === currentCategory.id ? currentCategory : category
+      );
+      setCategories(updatedCategories);
+      handleClose();
+      setToastMessage('Cập nhật danh mục thành công!');
+      setToastType('success');
+      setShowToast(true);
+    } catch (error) {
+      setToastMessage('Có lỗi xảy ra khi cập nhật danh mục.');
+      setToastType('error');
+      setShowToast(true);
+    }
   };
 
-  const handleAddCategory = () => {
-    const newId = categories.length > 0 ? Math.max(categories.map((c) => c.id)) + 1 : 1;
-    setCategories([...categories, { id: newId, ...newCategory }]);
-    handleCloseAdd();
+  const handleAdd = async () => {
+    const slug = generateSlug(newCategory.name); // Tạo slug từ tên danh mục
+    const categoryToAdd = { ...newCategory, slug }; // Thêm slug vào danh mục mới
+
+    try {
+      const response = await CategoryApi.create(categoryToAdd); // Gọi API để tạo mới danh mục
+      setCategories([...categories, response.data]);
+      handleCloseAdd();
+      setToastMessage('Thêm danh mục thành công!');
+      setToastType('success');
+      setShowToast(true);
+    } catch (error) {
+      setToastMessage('Có lỗi xảy ra khi thêm danh mục.');
+      setToastType('error');
+      setShowToast(true);
+    }
   };
 
-  const handleParentChange = (id, parentId) => {
-    setCategories(categories.map((category) =>
-      category.id === id ? { ...category, parent: parentId } : category
-    ));
-  };
-
-  const getParentName = (parentId) => {
-    const parentCategory = categories.find(category => category.id === parentId);
-    return parentCategory ? parentCategory.name : 'Không có';
-  };
+  // Hàm để lọc danh mục dựa trên từ khóa tìm kiếm
+  const filteredCategories = categories.filter(category =>
+    category.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
     <div>
-      <h2>Quản lý Danh mục</h2>
-      <Button variant="primary" onClick={handleShowAdd}>
-        Thêm Danh mục
-      </Button>
+      <Form.Control
+        type="text"
+        placeholder="Tìm kiếm danh mục..."
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)} // Cập nhật giá trị tìm kiếm
+      />
+      <Button onClick={handleShowAdd}>Thêm Danh Mục</Button>
       <Table striped bordered hover>
         <thead>
           <tr>
             <th>ID</th>
-            <th>Tên danh mục</th>
+            <th>Tên</th>
+            <th>Slug</th>
             <th>Danh mục cha</th>
-            <th>Thao tác</th>
+            <th>Hành động</th>
           </tr>
         </thead>
         <tbody>
-          {categories.map((category) => (
+          {filteredCategories.map(category => (
             <tr key={category.id}>
               <td>{category.id}</td>
               <td>{category.name}</td>
-              <td>{getParentName(category.parent)}</td>
+              <td>{category.slug}</td>
+              <td>{category.parent_id ? categories.find(cat => cat.id === category.parent_id)?.name : 'Không có'}</td>
               <td>
-                <Button variant="warning" onClick={() => handleShow(category)}>
-                  Sửa
-                </Button>
-                <Button variant="danger" onClick={() => handleDelete(category.id)}>
-                  Xóa
-                </Button>
+                <Button onClick={() => handleShow(category)}>Chỉnh sửa</Button>
+                <Button onClick={() => handleDelete(category.id)}>Xóa</Button>
               </td>
             </tr>
           ))}
         </tbody>
       </Table>
 
+      {/* Modal for editing category */}
       <Modal show={showModal} onHide={handleClose}>
         <Modal.Header closeButton>
-          <Modal.Title>Sửa Danh mục</Modal.Title>
+          <Modal.Title>Chỉnh Sửa Danh Mục</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          {currentCategory && (
-            <Form>
-              <Form.Group controlId="formCategoryName">
-                <Form.Label>Tên danh mục</Form.Label>
-                <Form.Control
-                  type="text"
-                  value={currentCategory.name}
-                  onChange={(e) => setCurrentCategory({ ...currentCategory, name: e.target.value })}
-                />
-              </Form.Group>
-              <Form.Group controlId="formParentCategory">
-                <Form.Label>Danh mục cha</Form.Label>
-                <Form.Control
-                  as="select"
-                  value={currentCategory.parent || ''}
-                  onChange={(e) => setCurrentCategory({ ...currentCategory, parent: parseInt(e.target.value) || null })}
-                >
-                  <option value="">Chọn danh mục cha</option>
-                  {categories.map((parent) => (
-                    <option key={parent.id} value={parent.id}>
-                      {parent.name}
-                    </option>
-                  ))}
-                </Form.Control>
-              </ Form.Group>
-            </Form>
-          )}
+          <Form>
+            <Form.Group controlId="formCategoryName">
+              <Form.Label>Tên Danh Mục</Form.Label>
+              <Form.Control
+                type="text"
+                value={currentCategory ? currentCategory.name : ''}
+                onChange={(e) => setCurrentCategory({ ...currentCategory, name: e.target.value })}
+              />
+            </Form.Group>
+            <Form.Group controlId="formCategorySlug">
+              <Form.Label>Slug</Form.Label>
+              <Form.Control
+                type="text"
+                value={currentCategory ? currentCategory.slug : ''}
+                onChange={(e) => setCurrentCategory({ ...currentCategory, slug: e.target.value })}
+              />
+            </Form.Group>
+            <Form.Group controlId="formParentCategory">
+              <Form.Label>Danh Mục Cha</Form.Label>
+              <Form.Control
+                as="select"
+                value={currentCategory ? currentCategory.parent_id : ''}
+                onChange={(e) => setCurrentCategory({ ...currentCategory, parent_id: e.target.value })}
+              >
+                <option value="">Chọn danh mục cha</option>
+                {categories.map((category) => (
+                  <option key={category.id} value={category.id}>{category.name}</option>
+                ))}
+              </Form.Control>
+            </Form.Group>
+          </Form>
         </Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={handleClose}>
             Đóng
           </Button>
           <Button variant="primary" onClick={handleSave}>
-            Lưu thay đổi
+            Lưu
           </Button>
         </Modal.Footer>
       </Modal>
 
+      {/* Modal for adding category */}
       <Modal show={showAddModal} onHide={handleCloseAdd}>
         <Modal.Header closeButton>
-          <Modal.Title>Thêm Danh mục</Modal.Title>
+          <Modal.Title>Thêm Danh Mục Mới</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <Form>
             <Form.Group controlId="formNewCategoryName">
-              <Form.Label>Tên danh mục</Form.Label>
+              <Form.Label>Tên Danh Mục</Form.Label>
               <Form.Control
                 type="text"
                 value={newCategory.name}
                 onChange={(e) => setNewCategory({ ...newCategory, name: e.target.value })}
               />
             </Form.Group>
+            <Form.Group controlId="formNewCategorySlug">
+              <Form.Label>Slug</Form.Label>
+              <Form.Control
+                type="text"
+                value={newCategory.slug}
+                onChange={(e) => setNewCategory({ ...newCategory, slug: e.target.value })}
+              />
+            </Form.Group>
             <Form.Group controlId="formNewParentCategory">
-              <Form.Label>Danh mục cha</Form.Label>
+              <Form.Label>Danh Mục Cha</Form.Label>
               <Form.Control
                 as="select"
-                value={newCategory.parent || ''}
-                onChange={(e) => setNewCategory({ ...newCategory, parent: parseInt(e.target.value) || null })}
+                value={newCategory.parent_id}
+                onChange={(e) => setNewCategory({ ...newCategory, parent_id: e.target.value })}
               >
                 <option value="">Chọn danh mục cha</option>
-                {categories.map((parent) => (
-                  <option key={parent.id} value={parent.id}>
-                    {parent.name}
-                  </option>
+                {categories.map((category) => (
+                  <option key={category.id} value={category.id}>{category.name}</option>
                 ))}
               </Form.Control>
             </Form.Group>
@@ -173,14 +254,26 @@ const CategoryManagement = () => {
           <Button variant="secondary" onClick={handleCloseAdd}>
             Đóng
           </Button>
-          <Button variant="primary" onClick={handleAddCategory}>
+          <Button variant="primary" onClick={handleAdd}>
             Thêm
           </Button>
         </Modal.Footer>
       </Modal>
+
+      {/* Toast for notifications */}
+      <Toast onClose={() => setShowToast(false)} show={showToast} delay={3000} autohide>
+        <Toast.Body className={toastType === 'error' ? 'text-danger' : 'text-success'}>
+          {toastMessage}
+        </Toast.Body>
+      </Toast>
     </div>
   );
 };
+
+
+
+
+
 
 const SizeManagement = () => {
   const [sizes, setSizes] = useState([
