@@ -29,12 +29,24 @@ const OrderPage = () => {
     setShowModal(true);
   };
 
-  const handleDeleteOrder = (orderId) => {
+  const handleDeleteOrder = async (orderId) => {
     // Xác nhận trước khi xóa
     const confirmDelete = window.confirm('Bạn có chắc chắn muốn xóa đơn hàng này?');
     if (confirmDelete) {
-      setOrders((prevOrders) => prevOrders.filter((order) => order.id !== orderId));
-      alert('Đơn hàng đã được xóa.');
+      try {
+        // Gọi API để xóa đơn hàng
+        const response = await OrderApi.deleteOrder(orderId);
+        if (response && response.status === 'success') {
+          // Cập nhật lại danh sách đơn hàng sau khi xóa
+          setOrders((prevOrders) => prevOrders.filter((order) => order.id !== orderId));
+          alert('Đơn hàng đã được xóa.');
+        } else {
+          alert('Không thể xóa đơn hàng.');
+        }
+      } catch (error) {
+        console.log('Lỗi khi xóa đơn hàng:', error);
+        alert('Đã xảy ra lỗi khi xóa đơn hàng.');
+      }
     }
   };
 
