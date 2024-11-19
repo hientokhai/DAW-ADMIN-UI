@@ -11,52 +11,6 @@ const OrderPage = () => {
 
   const navigate = useNavigate();
 
-  // useEffect(() => {
-  //   fetchOrders();
-  // }, []);
-
-  // const fetchOrders = () => {
-  //   const fakeData = [
-  //     {
-  //       id: 1,
-  //       createdAt: '11/12/2024',
-  //       customer: 'Khải Hiên',
-  //       totalAmount: '525000',
-  //       paymentMethod: 'VNPay',
-  //       paymentStatus: 'Đã thanh toán',
-  //       orderStatus: 'Chờ xác nhận'
-  //     },
-  //     {
-  //       id: 2,
-  //       createdAt: '10/12/2024',
-  //       customer: 'Nguyễn Văn A',
-  //       totalAmount: '730000',
-  //       paymentMethod: 'COD',
-  //       paymentStatus: 'Chưa thanh toán',
-  //       orderStatus: 'Đang vận chuyển'
-  //     },
-  //     {
-  //       id: 3,
-  //       createdAt: '10/12/2024',
-  //       customer: 'Nguyễn Văn B',
-  //       totalAmount: '730000',
-  //       paymentMethod: 'COD',
-  //       paymentStatus: 'Đã thanh toán',
-  //       orderStatus: 'Hoàn thành'
-  //     },
-  //     {
-  //       id: 4,
-  //       createdAt: '10/12/2024',
-  //       customer: 'Nguyễn Văn C',
-  //       totalAmount: '730000',
-  //       paymentMethod: 'COD',
-  //       paymentStatus: 'Chưa thanh toán',
-  //       orderStatus: 'Đã hủy'
-  //     }
-  //   ];
-  //   setOrders(fakeData);
-  // };
-
   const fetchOrderList = async () => {
     try {
       const response = await OrderApi.getAll();
@@ -96,7 +50,7 @@ const OrderPage = () => {
   const handleSaveStatusChange = () => {
     if (currentOrder) {
       setOrders((prevOrders) =>
-        prevOrders.map((order) => (order.id === currentOrder.id ? { ...order, orderStatus: currentOrder.orderStatus } : order))
+        prevOrders.map((order) => (order.id === currentOrder.id ? { ...order, order_status: currentOrder.order_status } : order))
       );
     }
     handleClose();
@@ -105,7 +59,7 @@ const OrderPage = () => {
 
   const handleStatusChange = (e) => {
     if (currentOrder) {
-      setCurrentOrder({ ...currentOrder, orderStatus: e.target.value });
+      setCurrentOrder({ ...currentOrder, order_status: e.target.value });
     }
   };
 
@@ -266,7 +220,7 @@ const OrderPage = () => {
             <Form>
               <Form.Group controlId="orderStatus">
                 <Form.Label>Trạng thái đơn hàng</Form.Label>
-                <Form.Control as="select" value={currentOrder.orderStatus} onChange={handleStatusChange}>
+                <Form.Control as="select" value={currentOrder.order_status} onChange={handleStatusChange}>
                   <option disabled value="Chờ xử lý">
                     Chờ xử lý
                   </option>
