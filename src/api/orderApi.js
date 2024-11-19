@@ -6,8 +6,16 @@ const OrderApi = {
     return axiosClient.get(url, { params });
   },
   get: (id) => {
-    const url = `https://641855f875be53f451dca0ae.mockapi.io/api/products/${id}`;
+    const url = `http://127.0.0.1:8000/api/orders/${id}`;
     return axiosClient.get(url);
+  },
+  updateStatus: (id, data) => {
+    const url = `http://127.0.0.1:8000/api/orders/${id}/status`;
+    return axiosClient.put(url, data);
+  },
+  deleteOrder: (id) => {
+    const url = `http://127.0.0.1:8000/api/orders/${id}`;
+    return axiosClient.delete(url);
   }
 };
 
