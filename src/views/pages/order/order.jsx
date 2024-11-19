@@ -47,19 +47,30 @@ const OrderPage = () => {
     setCurrentOrder(null);
   };
 
-  const handleSaveStatusChange = () => {
+  const handleSaveStatusChange = async () => {
     if (currentOrder) {
-      setOrders((prevOrders) =>
-        prevOrders.map((order) => (order.id === currentOrder.id ? { ...order, order_status: currentOrder.order_status } : order))
-      );
+      try {
+        // Gọi API để cập nhật trạng thái đơn hàng
+        const response = await OrderApi.updateStatus(currentOrder.id, { order_status: currentOrder.order_status });
+        if (response && response.status === 'success') {
+          // Lấy dữ liệu mới từ server để đảm bảo cập nhật chính xác
+          await fetchOrderList(); // Gọi lại hàm lấy danh sách đơn hàng để cập nhật
+          alert('Trạng thái đơn hàng đã được cập nhật!');
+        } else {
+          alert('Không thể cập nhật trạng thái đơn hàng.');
+        }
+      } catch (error) {
+        console.log('Lỗi khi cập nhật trạng thái đơn hàng:', error);
+        alert('Đã xảy ra lỗi khi cập nhật trạng thái đơn hàng.');
+      }
     }
     handleClose();
-    alert('Trạng thái đơn hàng đã được cập nhật!');
   };
 
   const handleStatusChange = (e) => {
     if (currentOrder) {
       setCurrentOrder({ ...currentOrder, order_status: e.target.value });
+      console.log(currentOrder);
     }
   };
 
@@ -221,12 +232,12 @@ const OrderPage = () => {
               <Form.Group controlId="orderStatus">
                 <Form.Label>Trạng thái đơn hàng</Form.Label>
                 <Form.Control as="select" value={currentOrder.order_status} onChange={handleStatusChange}>
-                  <option disabled value="Chờ xử lý">
+                  <option disabled value="1">
                     Chờ xử lý
                   </option>
-                  <option value="Đang vận chuyển">Bàn giao vận chuyển</option>
-                  <option value="Đã giao">Giao thành công</option>
-                  <option value="Đã hủy">Hủy đơn hàng</option>
+                  <option value="2">Bàn giao vận chuyển</option>
+                  <option value="3">Giao thành công</option>
+                  <option value="4">Hủy đơn hàng</option>
                 </Form.Control>
               </Form.Group>
             </Form>
