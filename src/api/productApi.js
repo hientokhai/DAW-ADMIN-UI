@@ -7,15 +7,15 @@ const ProductApi = {
   },
 
   addProduct: async (newProduct) => {
-        try {
-            // Gửi yêu cầu thêm sản phẩm lên backend
-            const response = await axios.post('http://127.0.0.1:8000/api/products', newProduct);
-            return response;
-        } catch (error) {
-            console.error('Error adding product:', error);
-            throw error;
-        }
-    },
+    try {
+      // Gửi yêu cầu thêm sản phẩm lên backend
+      const response = await axios.post('http://127.0.0.1:8000/api/products', newProduct);
+      return response;
+    } catch (error) {
+      console.error('Error adding product:', error);
+      throw error;
+    }
+  },
 
   getColors: (params) => {
     const url = 'http://127.0.0.1:8000/api/colors/';
@@ -30,11 +30,12 @@ const ProductApi = {
     return axiosClient.get(url, { params });
   },
   create: async (newProduct) => {
+    // eslint-disable-next-line no-useless-catch
     try {
-        const response = await axios.post('http://127.0.0.1:8000/api/products', newProduct);
-        return response.data;  // trả về dữ liệu sản phẩm sau khi thêm
+      const response = await axios.post('http://127.0.0.1:8000/api/products', newProduct);
+      return response.data; // trả về dữ liệu sản phẩm sau khi thêm
     } catch (error) {
-        throw error;
+      throw error;
     }
   },
 };
