@@ -6,6 +6,135 @@ import avatar2 from '../../assets/images/user/avatar-2.jpg';
 import avatar3 from '../../assets/images/user/avatar-3.jpg';
 
 const DashDefault = () => {
+    const [orders, setOrders] = useState([]);
+    const [totals, setTotals] = useState({
+        "Chờ xử lý": 0,
+        "Đang vận chuyển": 0,
+        "Đã giao": 0,
+        "Đã hủy": 0,
+    });
+    const [revenue, setRevenue] = useState(0); // Tổng doanh thu
+    const [profit, setProfit] = useState(0); // Tổng lợi nhuận
+    const [customers, setCustomers] = useState([]); // Danh sách khách hàng
+    const [totalCustomers, setTotalCustomers] = useState(0); // Tổng số khách hàng
+    const [newCustomersToday, setNewCustomersToday] = useState(0); // Tổng số khách hàng mới hôm nay
+
+    useEffect(() => {
+        fetchOrders();
+        fetchCustomers();
+    }, []);
+
+    const fetchOrders = async () => {
+        try {
+            // Fetch sản phẩm
+            const response = await OrderApi.getAll();
+            console.log('Dữ liệu:', response.data);
+            setOrders(response.data);
+            // Tính tổng trạng thái đơn hàng
+            const calculatedTotals = calculateOrderStatusTotals(response.data);
+            setTotals(calculatedTotals);
+
+             // Tính doanh thu và lợi nhuận
+            calculateRevenueAndProfit(orders);
+
+            filterOrdersByTab("today");
+        } catch (error) {
+            console.error('Lỗi khi lấy danh sách:', error);
+        }
+    };
+
+    const fetchCustomers = async () => {
+        try {
+            // Fetch khách hàng
+            const response = await CustomerApi.getAll();
+            console.log('Dữ liệu khách hàng:', response.data);
+            setCustomers(response.data);
+            // Tính tổng số khách hàng và số khách hàng mới trong hôm nay
+            calculateCustomerStats(response.data);
+        } catch (error) {
+            console.error('Lỗi khi lấy danh sách khách hàng:', error);
+        }
+    };
+
+    const calculateOrderStatusTotals = (orders) => {
+        const totals = {
+            "Chờ xử lý": 0,
+            "Đang vận chuyển": 0,
+            "Đã giao": 0,
+            "Đã hủy": 0,
+        };
+    
+        orders.forEach((orderStats) => {
+            switch (orderStats.order_status) {
+                case 1:
+                    totals["Chờ xử lý"] += 1;
+                    break;
+                case 2:
+                    totals["Đang vận chuyển"] += 1;
+                    break;
+                case 3:
+                    totals["Đã giao"] += 1;
+                    break;
+                default:
+                    totals["Đã hủy"] += 1;
+                    break;
+            }
+        });
+    
+        return totals;
+    };
+    const calculateRevenueAndProfit = async (orders) => {
+        let totalRevenue = 0;
+        let totalProfit = 0;
+
+        const today = new Date().toISOString().split('T')[0]; // Lấy ngày hôm nay ở định dạng YYYY-MM-DD
+
+        for (const order of orders) {
+            const orderDate = new Date(order.created_at).toISOString().split('T')[0]; // Ngày tạo đơn hàng
+
+            if (orderDate === today && order.order_status === 3) { // Chỉ tính đơn "đã giao" trong hôm nay
+                totalRevenue += order.total_order_price;
+
+                // Gọi API lấy chi tiết sản phẩm của đơn hàng
+                const orderDetailsResponse = await OrderApi.get(order.id);
+                const orderDetails = orderDetailsResponse.data; // Chi tiết sản phẩm
+
+                // Tính lợi nhuận cho từng đơn hàng
+                const orderCost = orderDetails.reduce((sum, item) => {
+                    return sum + item.product_cost * item.quantity; // Tổng giá nhập
+                }, 0);
+
+                totalProfit += order.total_order_price - orderCost;
+            }
+        }
+
+        setRevenue(totalRevenue);
+        setProfit(totalProfit);
+    };
+
+    const calculateCustomerStats = (customers) => {
+        const today = new Date().toISOString().split('T')[0]; // Ngày hôm nay
+        let totalCustomers = 0;
+        let newCustomersToday = 0;
+    
+        customers.forEach((customer) => {
+            if (customer.role === 'customer') {
+                totalCustomers += 1;
+    
+                // Kiểm tra nếu created_at hợp lệ trước khi sử dụng
+                if (customer.created_at && !isNaN(new Date(customer.created_at))) {
+                    const customerCreatedDate = new Date(customer.created_at).toISOString().split('T')[0];
+                    if (customerCreatedDate === today) {
+                        newCustomersToday += 1;
+                    }
+                }
+            }
+        });
+    
+        setTotalCustomers(totalCustomers);
+        setNewCustomersToday(newCustomersToday);
+    };
+
     const orderStats = [
         { title: 'Đơn hàng đã xử lý', value: 120, icon: 'check-circle', class: 'bg-success' },
         { title: 'Đơn hàng đang chờ', value: 30, icon: 'hourglass', class: 'bg-warning' },
@@ -88,7 +217,7 @@ const DashDefault = () => {
                 </Col>
                 <Col md={12} xl={8} className="user-activity">
                     <Card>
-                        <Tabs defaultActiveKey="today" id="uncontrolled-tab-example">
+                        <Tabs defaultActiveKey="today" id="uncontrolled-tab-example" >
                             <Tab eventKey="today" title="Hôm nay">
                                 {tabContent}
                             </Tab>
