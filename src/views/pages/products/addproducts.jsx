@@ -58,12 +58,13 @@ const AddProductsPage = () => {
 
     // Thêm variant mới
     const addVariant = () => {
+        console.log('Adding new variant');
         setNewProduct({
             ...newProduct,
             productVariants: [...newProduct.productVariants, { color_id: '', size_id: '', quantity: '' }],
         });
     };
-
+    console.log(newProduct.productVariants);
     // Xóa variant
     const removeVariant = (index) => {
         const updatedVariants = [...newProduct.productVariants];
@@ -206,7 +207,7 @@ const AddProductsPage = () => {
                                 className="mb-2"
                             >
                                 <option value="">Chọn màu sắc</option>
-                                {colors.map((color) => (
+                                {colors?.map((color) => (
                                     <option key={color.id} value={color.id}>
                                         {color.color_name}
                                     </option>
@@ -222,7 +223,7 @@ const AddProductsPage = () => {
                                 className="mb-2"
                             >
                                 <option value="">Chọn kích cỡ</option>
-                                {sizes.map((size) => (
+                                {sizes?.map((size) => (
                                     <option key={size.id} value={size.id}>
                                         {size.size_name}
                                     </option>

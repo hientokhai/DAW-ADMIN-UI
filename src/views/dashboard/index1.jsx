@@ -1,9 +1,9 @@
-import React from 'react';
-import { Row, Col, Card, Table, Tabs, Tab } from 'react-bootstrap';
+import React, { useState, useEffect } from 'react';
+import { Row, Col, Card, Tabs, Tab } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import avatar1 from '../../assets/images/user/avatar-1.jpg';
-import avatar2 from '../../assets/images/user/avatar-2.jpg';
-import avatar3 from '../../assets/images/user/avatar-3.jpg';
+import OrderApi from 'api/orderApi';
+import CustomerApi from 'api/customerApi';
 
 const DashDefault = () => {
     const [orders, setOrders] = useState([]);
@@ -26,20 +26,18 @@ const DashDefault = () => {
 
     const fetchOrders = async () => {
         try {
-            // Fetch sản phẩm
+            // Fetch đơn hàng
             const response = await OrderApi.getAll();
-            console.log('Dữ liệu:', response.data);
+            console.log('Dữ liệu đơn hàng:', response.data);
             setOrders(response.data);
             // Tính tổng trạng thái đơn hàng
             const calculatedTotals = calculateOrderStatusTotals(response.data);
             setTotals(calculatedTotals);
 
-             // Tính doanh thu và lợi nhuận
-            calculateRevenueAndProfit(orders);
-
-            filterOrdersByTab("today");
+            // Tính doanh thu và lợi nhuận
+            calculateRevenueAndProfit(response.data);
         } catch (error) {
-            console.error('Lỗi khi lấy danh sách:', error);
+            console.error('Lỗi khi lấy danh sách đơn hàng:', error);
         }
     };
 
@@ -49,6 +47,7 @@ const DashDefault = () => {
             const response = await CustomerApi.getAll();
             console.log('Dữ liệu khách hàng:', response.data);
             setCustomers(response.data);
+
             // Tính tổng số khách hàng và số khách hàng mới trong hôm nay
             calculateCustomerStats(response.data);
         } catch (error) {
@@ -63,7 +62,7 @@ const DashDefault = () => {
             "Đã giao": 0,
             "Đã hủy": 0,
         };
-    
+
         orders.forEach((orderStats) => {
             switch (orderStats.order_status) {
                 case 1:
@@ -80,9 +79,10 @@ const DashDefault = () => {
                     break;
             }
         });
-    
+
         return totals;
     };
+
     const calculateRevenueAndProfit = async (orders) => {
         let totalRevenue = 0;
         let totalProfit = 0;
@@ -116,40 +116,32 @@ const DashDefault = () => {
         const today = new Date().toISOString().split('T')[0]; // Ngày hôm nay
         let totalCustomers = 0;
         let newCustomersToday = 0;
-    
+
         customers.forEach((customer) => {
             if (customer.role === 'customer') {
                 totalCustomers += 1;
-    
-                // Kiểm tra nếu created_at hợp lệ trước khi sử dụng
-                if (customer.created_at && !isNaN(new Date(customer.created_at))) {
-                    const customerCreatedDate = new Date(customer.created_at).toISOString().split('T')[0];
-                    if (customerCreatedDate === today) {
-                        newCustomersToday += 1;
-                    }
+
+                const customerCreatedDate = new Date(customer.created_at).toISOString().split('T')[0];
+                if (customerCreatedDate === today) {
+                    newCustomersToday += 1;
                 }
             }
         });
-    
+
         setTotalCustomers(totalCustomers);
         setNewCustomersToday(newCustomersToday);
     };
 
     const orderStats = [
-        { title: 'Đơn hàng đã xử lý', value: 120, icon: 'check-circle', class: 'bg-success' },
-        { title: 'Đơn hàng đang chờ', value: 30, icon: 'hourglass', class: 'bg-warning' },
-        { title: 'Đơn hàng đã giao', value: 90, icon: 'truck', class: 'bg-info' },
-        { title: 'Đơn hàng đã hủy', value: 10, icon: 'times-circle', class: 'bg-danger' },
+        { title: 'Đơn hàng chờ xử lý', value: totals["Chờ xử lý"], icon: 'hourglass', class: 'bg-warning' },
+        { title: 'Đơn hàng đang vận chuyển', value: totals["Đang vận chuyển"], icon: 'truck', class: 'bg-info' },
+        { title: 'Đơn hàng đã giao', value: totals["Đã giao"], icon: 'check-circle', class: 'bg-success' },
+        { title: 'Đơn hàng đã hủy', value: totals["Đã hủy"], icon: 'times-circle', class: 'bg-danger' },
     ];
 
     const customerStats = [
-        { title: 'Tổng số khách hàng', value: 500 },
-        { title: 'Khách hàng mới hôm nay', value: 5 },
-    ];
-
-    const profitStats = [
-        { title: 'Doanh thu hôm nay', value: '500,000 VND' },
-        { title: 'Lợi nhuận', value: '500,000 VND' },
+        { title: 'Tổng số khách hàng', value: totalCustomers },
+        { title: 'Khách hàng mới hôm nay', value: newCustomersToday },
     ];
 
     const tabContent = (
@@ -208,16 +200,16 @@ const DashDefault = () => {
                             <Card.Title as="h5">Lợi nhuận</Card.Title>
                         </Card.Header>
                         <Card.Body>
-                            <h3>{profitStats[0].value}</h3>
-                            <p>{profitStats[0].title}</p>
-                            <h3>{profitStats[1].value}</h3>
-                            <p>{profitStats[1].title}</p>
+                            <h3>{revenue.toLocaleString()} VND</h3>
+                            <p>Doanh thu hôm nay</p>
+                            <h3>{profit.toLocaleString()} VND</h3>
+                            <p>Lợi nhuận</p>
                         </Card.Body>
                     </Card>
                 </Col>
                 <Col md={12} xl={8} className="user-activity">
                     <Card>
-                        <Tabs defaultActiveKey="today" id="uncontrolled-tab-example" >
+                        <Tabs defaultActiveKey="today" id="uncontrolled-tab-example">
                             <Tab eventKey="today" title="Hôm nay">
                                 {tabContent}
                             </Tab>
