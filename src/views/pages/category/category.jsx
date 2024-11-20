@@ -317,10 +317,25 @@ const SizeManagement = () => {
     setNewDescription('');
   };
 
-  const handleDeleteSize = (id) => {
-    const updatedSizes = sizes.filter((size) => size.id !== id);
-    setSizes(updatedSizes);
-    console.log('Deleted size with ID:', id);
+  const handleDeleteSize = async (id) => {
+    const confirmDelete = window.confirm("Bạn có chắc chắn muốn xóa kích thước này?");
+
+    if (!confirmDelete) {
+      return; // Nếu người dùng không xác nhận, thoát khỏi hàm
+    }
+
+    try {
+      // Gọi API để xóa kích thước
+      await SizeApi.destroy(id);
+
+      // Cập nhật danh sách kích thước trong state
+      setSizes((prevSizes) => prevSizes.filter((size) => size.id !== id));
+
+      alert("Kích thước đã được xóa thành công.");
+    } catch (error) {
+      console.error('Error deleting size:', error);
+      alert("Có lỗi xảy ra khi xóa kích thước. Vui lòng thử lại.");
+    }
   };
 
   const handleSaveSize = async () => {
@@ -345,6 +360,9 @@ const SizeManagement = () => {
 
       // Đóng modal
       handleCloseSize();
+
+      // Tự động làm mới trang
+      window.location.reload();
     } catch (error) {
       console.error('Error updating size:', error);
       alert("Có lỗi xảy ra khi cập nhật kích thước. Vui lòng thử lại.");
@@ -357,21 +375,20 @@ const SizeManagement = () => {
       return;
     }
 
-    // Tạo đối tượng kích thước mới
     const newSizeObject = { size_name: newSize, description: newDescription };
 
     try {
-      // Gọi API để thêm kích thước mới vào cơ sở dữ liệu
       const response = await SizeApi.store(newSizeObject);
 
-      // Nếu thành công, cập nhật danh sách kích thước với kích thước mới
       setSizes((prevSizes) => [
         ...prevSizes,
-        { id: response.data.id, ...newSizeObject } // Assuming the response contains the new size's ID
+        { id: response.data.id, ...newSizeObject }
       ]);
 
-      // Đóng modal và reset các trường nhập liệu
-      handleCloseAddSize();
+      alert("Kích thước đã được thêm thành công!");
+
+      // Tự động làm mới trang
+      window.location.reload();
     } catch (error) {
       console.error('Error adding size:', error);
       alert("Có lỗi xảy ra khi thêm kích thước. Vui lòng thử lại.");
