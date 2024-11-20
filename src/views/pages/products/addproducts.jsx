@@ -316,7 +316,7 @@ const AddProductsPage = () => {
                                         )}
                                     </td>
                                     <td>
-                                        {newProduct.productVariants
+                                        {product.productVariants
                                             .map(productVariants => {
                                                 const color = colors.find(color => color.id === productVariants.color_id);
                                                 return color ? color.color_name : '';
