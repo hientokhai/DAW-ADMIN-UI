@@ -323,12 +323,32 @@ const SizeManagement = () => {
     console.log('Deleted size with ID:', id);
   };
 
-  const handleSaveSize = () => {
-    const updatedSizes = sizes.map((size) =>
-      size.id === currentSize.id ? currentSize : size
-    );
-    setSizes(updatedSizes);
-    handleCloseSize();
+  const handleSaveSize = async () => {
+    if (!currentSize || !currentSize.size_name || !currentSize.description) {
+      alert("Vui lòng nhập tên kích thước và mô tả.");
+      return;
+    }
+
+    try {
+      // Gọi API để cập nhật kích thước
+      const response = await SizeApi.update(currentSize.id, {
+        size_name: currentSize.size_name,
+        description: currentSize.description,
+      });
+
+      // Cập nhật danh sách kích thước trong state
+      setSizes((prevSizes) =>
+        prevSizes.map((size) =>
+          size.id === currentSize.id ? { ...size, ...response.data } : size
+        )
+      );
+
+      // Đóng modal
+      handleCloseSize();
+    } catch (error) {
+      console.error('Error updating size:', error);
+      alert("Có lỗi xảy ra khi cập nhật kích thước. Vui lòng thử lại.");
+    }
   };
 
   const handleAddSize = async () => {
