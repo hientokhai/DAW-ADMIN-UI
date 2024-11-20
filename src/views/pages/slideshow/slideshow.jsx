@@ -1,17 +1,18 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button, Modal, Form, Table } from 'react-bootstrap';
 import styled from 'styled-components';
+import SlideApi from 'api/SlideApi'; // Thay đổi đường dẫn nếu cần
 
 const StyledTable = styled(Table)`
-    td, th {
-        vertical-align: middle; /* Center align content vertically */
-    }
+  td, th {
+    vertical-align: middle; /* Center align content vertically */
+  }
 `;
 
 const SlideImage = styled.img`
-    width: 100px; /* Set a fixed width */
-    height: auto; /* Maintain aspect ratio */
-    object-fit: cover; /* Ensure the image covers the area without distortion */
+  width: 100px; /* Set a fixed width */
+  height: auto; /* Maintain aspect ratio */
+  object-fit: cover; /* Ensure the image covers the area without distortion */
 `;
 
 const SlideshowManagement = () => {
@@ -20,15 +21,32 @@ const SlideshowManagement = () => {
     const [showEditModal, setShowEditModal] = useState(false);
     const [currentSlide, setCurrentSlide] = useState(null);
     const [newSlide, setNewSlide] = useState({
-        id: Date.now(),
         title: '',
         image_url: '',
         link_url: '',
         description: '',
         is_active: true,
-        created_at: new Date().toISOString().split("T")[0],
-        deleted_at: null,
     });
+    const [isLoading, setIsLoading] = useState(false);
+    const [errorMessage, setErrorMessage] = useState(null);
+
+    useEffect(() => {
+        // Lấy danh sách slides từ API
+        const fetchData = async () => {
+            setIsLoading(true);
+            try {
+                const response = await SlideApi.getAll();
+                setSlides(response.data);
+                setErrorMessage(null);
+            } catch (error) {
+                console.error('Error fetching slides:', error);
+                setErrorMessage('Lỗi khi tải dữ liệu.');
+            } finally {
+                setIsLoading(false);
+            }
+        };
+        fetchData();
+    }, []);
 
     const handleShowAdd = () => setShowAddModal(true);
     const handleCloseAdd = () => setShowAddModal(false);
@@ -60,43 +78,88 @@ const SlideshowManagement = () => {
         }
     };
 
-    const handleAddSlide = () => {
-        setSlides([...slides, { ...newSlide, id: Date.now() }]);
-        resetNewSlide();
-        handleCloseAdd();
+    const handleAddSlide = async () => {
+        setIsLoading(true);
+        try {
+            const response = await SlideApi.store(newSlide);
+            setSlides([...slides, response.data]);
+            resetNewSlide();
+            handleCloseAdd();
+            setErrorMessage(null);
+        } catch (error) {
+            console.error('Error adding slide:', error);
+            setErrorMessage('Lỗi khi thêm slide.');
+        } finally {
+            setIsLoading(false);
+        }
     };
 
-    const handleEditSlide = () => {
-        setSlides(slides.map(slide => (slide.id === newSlide.id ? { ...newSlide } : slide)));
-        handleCloseEdit();
+    const handleEditSlide = async () => {
+        setIsLoading(true);
+        try {
+            const response = await SlideApi.update(newSlide.id, newSlide);
+            setSlides(slides.map((slide) =>
+                slide.id === newSlide.id ? response.data : slide
+            ));
+            handleCloseEdit();
+            setErrorMessage(null);
+        } catch (error) {
+            console.error('Error editing slide:', error);
+            setErrorMessage('Lỗi khi sửa slide.');
+        } finally {
+            setIsLoading(false);
+        }
     };
 
-    const toggleActive = (id) => {
-        setSlides(slides.map(slide =>
-            slide.id === id ? { ...slide, is_active: !slide.is_active } : slide
-        ));
+    const toggleActive = async (id) => {
+        setIsLoading(true);
+        try {
+            const response = await SlideApi.update(id, { is_active: !slides.find(slide => slide.id === id).is_active });
+            setSlides(slides.map(slide =>
+                slide.id === id ? response.data : slide
+            ));
+            setErrorMessage(null);
+        } catch (error) {
+            console.error('Error togg ling slide active state:', error);
+            setErrorMessage('Lỗi khi thay đổi trạng thái kích hoạt.');
+        } finally {
+            setIsLoading(false);
+        }
     };
 
-    const handleDeleteSlide = (id) => {
-        setSlides(slides.filter(slide => slide.id !== id));
+    const handleDeleteSlide = async (id) => {
+        setIsLoading(true);
+        try {
+            await SlideApi.delete(id);
+            setSlides(slides.filter(slide => slide.id !== id));
+            setErrorMessage(null);
+        } catch (error) {
+            console.error('Error deleting slide:', error);
+            setErrorMessage('Lỗi khi xóa slide.');
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     const resetNewSlide = () => {
         setNewSlide({
-            id: Date.now(),
             title: '',
             image_url: '',
             link_url: '',
             description: '',
             is_active: true,
-            created_at: new Date().toISOString(),
-            deleted_at: null,
         });
     };
-
+    const shortenUrl = (url) => {
+        // Giả lập việc rút ngắn URL, có thể sử dụng một API thực tế để rút ngắn URL
+        return url.length > 30 ? `${url.substring(0, 27)}...` : url;
+    };
     return (
         <div>
-            <Button variant="primary" onClick={handleShowAdd}>Thêm Slide</Button>
+            {errorMessage && <div className="alert alert-danger">{errorMessage}</div>}
+            <Button variant="primary" onClick={handleShowAdd} disabled={isLoading}>
+                {isLoading ? 'Đang tải...' : 'Thêm Slide'}
+            </Button>
 
             {/* Add Slide Modal */}
             <Modal show={showAddModal} onHide={handleCloseAdd}>
@@ -148,7 +211,9 @@ const SlideshowManagement = () => {
                 </Modal.Body>
                 <Modal.Footer>
                     <Button variant="secondary" onClick={handleCloseAdd}>Đóng</Button>
-                    <Button variant="primary" onClick={handleAddSlide}>Thêm Slide</Button>
+                    <Button variant="primary" onClick={handleAddSlide} disabled={isLoading}>
+                        {isLoading ? 'Đang thêm...' : 'Thêm Slide'}
+                    </Button>
                 </Modal.Footer>
             </Modal>
 
@@ -203,14 +268,16 @@ const SlideshowManagement = () => {
                                 type="checkbox"
                                 label="Kích hoạt"
                                 checked={newSlide.is_active}
-                                onChange={() => setNewSlide({ ...newSlide, is_active: !newSlide.is_active })}
+                                on Change={() => setNewSlide({ ...newSlide, is_active: !newSlide.is_active })}
                             />
                         </Form.Group>
                     </Form>
                 </Modal.Body>
                 <Modal.Footer>
                     <Button variant="secondary" onClick={handleCloseEdit}>Đóng</Button>
-                    <Button variant="primary" onClick={handleEditSlide}>Lưu thay đổi</Button>
+                    <Button variant="primary" onClick={handleEditSlide} disabled={isLoading}>
+                        {isLoading ? 'Đang lưu...' : 'Lưu thay đổi'}
+                    </Button>
                 </Modal.Footer>
             </Modal>
 
@@ -240,7 +307,8 @@ const SlideshowManagement = () => {
                                     />
                                 )}
                             </td>
-                            <td>{slide.link_url}</td>
+
+                            <td>{shortenUrl(slide.link_url)}</td>
                             <td>{slide.description}</td>
                             <td>
                                 <Button variant={slide.is_active ? 'success' : 'danger'} onClick={() => toggleActive(slide.id)}>
