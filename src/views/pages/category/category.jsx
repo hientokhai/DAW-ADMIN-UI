@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Modal, Button, Table, Form, Toast } from 'react-bootstrap';
 import CategoryApi from 'api/CategoryApi';
-
+import SizeApi from 'api/SizeApi';
 // Hàm để chuyển đổi tên thành slug
 const generateSlug = (name) => {
   const accentsMap = {
@@ -276,16 +276,26 @@ const CategoryManagement = () => {
 
 
 const SizeManagement = () => {
-  const [sizes, setSizes] = useState([
-    { id: 1, name: 'Size S' },
-    { id: 2, name: 'Size M' },
-    { id: 3, name: 'Size L' }
-  ]);
-
+  const [sizes, setSizes] = useState([]);
   const [showSizeModal, setShowSizeModal] = useState(false);
   const [showAddSizeModal, setShowAddSizeModal] = useState(false);
   const [currentSize, setCurrentSize] = useState(null);
   const [newSize, setNewSize] = useState('');
+  const [newDescription, setNewDescription] = useState('');
+
+  // Fetch sizes on component mount
+  useEffect(() => {
+    const fetchSizes = async () => {
+      try {
+        const response = await SizeApi.getAll();
+        console.log('Fetched sizes:', response);
+        setSizes(response);
+      } catch (error) {
+        console.error('Error fetching sizes:', error);
+      }
+    };
+    fetchSizes();
+  }, []);
 
   const handleShowSize = (size) => {
     setCurrentSize(size);
@@ -304,22 +314,85 @@ const SizeManagement = () => {
   const handleCloseAddSize = () => {
     setShowAddSizeModal(false);
     setNewSize('');
+    setNewDescription('');
   };
 
-  const handleDeleteSize = (id) => {
-    setSizes(sizes.filter((size) => size.id !== id));
+  const handleDeleteSize = async (id) => {
+    const confirmDelete = window.confirm("Bạn có chắc chắn muốn xóa kích thước này?");
+
+    if (!confirmDelete) {
+      return; // Nếu người dùng không xác nhận, thoát khỏi hàm
+    }
+
+    try {
+      // Gọi API để xóa kích thước
+      await SizeApi.destroy(id);
+
+      // Cập nhật danh sách kích thước trong state
+      setSizes((prevSizes) => prevSizes.filter((size) => size.id !== id));
+
+      alert("Kích thước đã được xóa thành công.");
+    } catch (error) {
+      console.error('Error deleting size:', error);
+      alert("Có lỗi xảy ra khi xóa kích thước. Vui lòng thử lại.");
+    }
   };
 
-  const handleSaveSize = () => {
-    const updatedSizes = sizes.map((size) => (size.id === currentSize.id ? currentSize : size));
-    setSizes(updatedSizes);
-    handleCloseSize();
+  const handleSaveSize = async () => {
+    if (!currentSize || !currentSize.size_name || !currentSize.description) {
+      alert("Vui lòng nhập tên kích thước và mô tả.");
+      return;
+    }
+
+    try {
+      // Gọi API để cập nhật kích thước
+      const response = await SizeApi.update(currentSize.id, {
+        size_name: currentSize.size_name,
+        description: currentSize.description,
+      });
+
+      // Cập nhật danh sách kích thước trong state
+      setSizes((prevSizes) =>
+        prevSizes.map((size) =>
+          size.id === currentSize.id ? { ...size, ...response.data } : size
+        )
+      );
+
+      // Đóng modal
+      handleCloseSize();
+
+      // Tự động làm mới trang
+      window.location.reload();
+    } catch (error) {
+      console.error('Error updating size:', error);
+      alert("Có lỗi xảy ra khi cập nhật kích thước. Vui lòng thử lại.");
+    }
   };
 
-  const handleAddSize = () => {
-    const newId = sizes.length > 0 ? Math.max(sizes.map((s) => s.id)) + 1 : 1;
-    setSizes([...sizes, { id: newId, name: newSize }]);
-    handleCloseAddSize();
+  const handleAddSize = async () => {
+    if (!newSize || !newDescription) {
+      alert("Vui lòng nhập tên kích thước và mô tả.");
+      return;
+    }
+
+    const newSizeObject = { size_name: newSize, description: newDescription };
+
+    try {
+      const response = await SizeApi.store(newSizeObject);
+
+      setSizes((prevSizes) => [
+        ...prevSizes,
+        { id: response.data.id, ...newSizeObject }
+      ]);
+
+      alert("Kích thước đã được thêm thành công!");
+
+      // Tự động làm mới trang
+      window.location.reload();
+    } catch (error) {
+      console.error('Error adding size:', error);
+      alert("Có lỗi xảy ra khi thêm kích thước. Vui lòng thử lại.");
+    }
   };
 
   return (
@@ -333,14 +406,16 @@ const SizeManagement = () => {
           <tr>
             <th>ID</th>
             <th>Tên Size</th>
+            <th>Mô tả</th>
             <th>Thao tác</th>
           </tr>
         </thead>
         <tbody>
-          {sizes.map((size) => (
+          {sizes.map(size => (
             <tr key={size.id}>
               <td>{size.id}</td>
-              <td>{size.name}</td>
+              <td>{size.size_name}</td>
+              <td>{size.description}</td>
               <td>
                 <Button variant="warning" onClick={() => handleShowSize(size)}>
                   Sửa
@@ -354,6 +429,7 @@ const SizeManagement = () => {
         </tbody>
       </Table>
 
+      {/* Modal for Editing Size */}
       <Modal show={showSizeModal} onHide={handleCloseSize}>
         <Modal.Header closeButton>
           <Modal.Title>Sửa Size</Modal.Title>
@@ -365,8 +441,16 @@ const SizeManagement = () => {
                 <Form.Label>Tên Size</Form.Label>
                 <Form.Control
                   type="text"
-                  value={currentSize.name}
-                  onChange={(e) => setCurrentSize({ ...currentSize, name: e.target.value })}
+                  value={currentSize.size_name}
+                  onChange={(e) => setCurrentSize({ ...currentSize, size_name: e.target.value })}
+                />
+              </Form.Group>
+              <Form.Group controlId="formSizeDescription">
+                <Form.Label>Mô tả</Form.Label>
+                <Form.Control
+                  type="text"
+                  value={currentSize.description}
+                  onChange={(e) => setCurrentSize({ ...currentSize, description: e.target.value })}
                 />
               </Form.Group>
             </Form>
@@ -382,6 +466,7 @@ const SizeManagement = () => {
         </Modal.Footer>
       </Modal>
 
+      {/* Modal for Adding Size */}
       <Modal show={showAddSizeModal} onHide={handleCloseAddSize}>
         <Modal.Header closeButton>
           <Modal.Title>Thêm Size</Modal.Title>
@@ -391,6 +476,10 @@ const SizeManagement = () => {
             <Form.Group controlId="formNewSizeName">
               <Form.Label>Tên Size</Form.Label>
               <Form.Control type="text" value={newSize} onChange={(e) => setNewSize(e.target.value)} />
+            </Form.Group>
+            <Form.Group controlId="formNewSizeDescription">
+              <Form.Label>Mô tả</Form.Label>
+              <Form.Control type="text" value={newDescription} onChange={(e) => setNewDescription(e.target.value)} />
             </Form.Group>
           </Form>
         </Modal.Body>
@@ -406,6 +495,7 @@ const SizeManagement = () => {
     </div>
   );
 };
+
 
 const ColorManagement = () => {
   const [colors, setColors] = useState([
