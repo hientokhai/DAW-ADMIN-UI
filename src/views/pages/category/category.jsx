@@ -289,7 +289,7 @@ const SizeManagement = () => {
       try {
         const response = await SizeApi.getAll();
         console.log('Fetched sizes:', response);
-        setSizes(response); // Update the sizes state with the fetched data
+        setSizes(response);
       } catch (error) {
         console.error('Error fetching sizes:', error);
       }
@@ -331,11 +331,31 @@ const SizeManagement = () => {
     handleCloseSize();
   };
 
-  const handleAddSize = () => {
-    const newId = sizes.length > 0 ? Math.max(sizes.map((s) => s.id)) + 1 : 1;
-    const newSizeObject = { id: newId, size_name: newSize, description: newDescription };
-    setSizes([...sizes, newSizeObject]);
-    handleCloseAddSize();
+  const handleAddSize = async () => {
+    if (!newSize || !newDescription) {
+      alert("Vui lòng nhập tên kích thước và mô tả.");
+      return;
+    }
+
+    // Tạo đối tượng kích thước mới
+    const newSizeObject = { size_name: newSize, description: newDescription };
+
+    try {
+      // Gọi API để thêm kích thước mới vào cơ sở dữ liệu
+      const response = await SizeApi.store(newSizeObject);
+
+      // Nếu thành công, cập nhật danh sách kích thước với kích thước mới
+      setSizes((prevSizes) => [
+        ...prevSizes,
+        { id: response.data.id, ...newSizeObject } // Assuming the response contains the new size's ID
+      ]);
+
+      // Đóng modal và reset các trường nhập liệu
+      handleCloseAddSize();
+    } catch (error) {
+      console.error('Error adding size:', error);
+      alert("Có lỗi xảy ra khi thêm kích thước. Vui lòng thử lại.");
+    }
   };
 
   return (
