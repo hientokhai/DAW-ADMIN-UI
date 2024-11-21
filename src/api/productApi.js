@@ -38,6 +38,14 @@ const ProductApi = {
       throw error;
     }
   },
+  getById: async (id) => {
+    const url = `http://127.0.0.1:8000/api/products/${id}`;
+    return axiosClient.get(url);
+  },
+  update: (id, data, config = {}) => {
+    const url = `http://127.0.0.1:8000/api/products/${id}`;
+    return axiosClient.put(url, data, config);
+  }
 };
 
 export default ProductApi;
