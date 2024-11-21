@@ -10,15 +10,26 @@ const ProductsPage = () => {
     const [searchTerm, setSearchTerm] = useState("");
     const [filteredProducts, setFilteredProducts] = useState([]);
     const [expandedProductId, setExpandedProductId] = useState(null);
+    const [sizes, setSizes] = useState([]);
     const navigate = useNavigate();
     useEffect(() => {
         fetchProducts();
+        fetchSizes();
     }, []);
 
     useEffect(() => {
         handleSearch(searchTerm);
     }, [products, searchTerm]);
 
+    // Fetch dữ liệu kích thước từ API
+    const fetchSizes = async () => {
+        try {
+            const response = await ProductApi.getSizes(); // Giả sử API trả về một danh sách các kích thước
+            setSizes(response.data);
+        } catch (error) {
+            console.error('Lỗi khi lấy danh sách kích thước:', error);
+        }
+    };
     const fetchProducts = async () => {
         try {
             // Fetch sản phẩm
@@ -29,6 +40,11 @@ const ProductsPage = () => {
         } catch (error) {
             console.error('Lỗi khi lấy danh sách sản phẩm:', error);
         }
+    };
+    
+    const getSizeNameById = (sizeId) => {
+        const size = sizes.find((s) => s.id === sizeId);
+        return size ? size.size_name : 'Không xác định'; // Trả về tên size hoặc 'Không xác định' nếu không tìm thấy
     };
 
     // const fetchProductList = async () => {
