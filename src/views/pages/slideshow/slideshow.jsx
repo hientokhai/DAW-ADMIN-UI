@@ -116,8 +116,7 @@ const SlideshowManagement = () => {
                 formData.append('image_url', newSlide.image_url); // Nếu image_url là một tệp tin
             }
             formData.append('link_url', newSlide.link_url);
-            formData.append('description', newSlide.description);
-            formData.append('is_active', newSlide.is_active);
+            formData.append('description', newSlide.description); formData.append('is_active', newSlide.is_active);
 
             const response = await SlideApi.update(newSlide.id, formData);
             setSlides(slides.map((slide) => (slide.id === newSlide.id ? response.data : slide)));
@@ -139,7 +138,7 @@ const SlideshowManagement = () => {
             ));
             setErrorMessage(null);
         } catch (error) {
-            console.error('Error togg ling slide active state:', error);
+            console.error('Error toggling slide active state:', error);
             setErrorMessage('Lỗi khi thay đổi trạng thái kích hoạt.');
         } finally {
             setIsLoading(false);
@@ -168,8 +167,8 @@ const SlideshowManagement = () => {
             is_active: true,
         });
     };
+
     const shortenUrl = (url) => {
-        // Giả lập việc rút ngắn URL, có thể sử dụng một API thực tế để rút ngắn URL
         return url.length > 30 ? `${url.substring(0, 27)}...` : url;
     };
 
@@ -180,7 +179,6 @@ const SlideshowManagement = () => {
                 {isLoading ? 'Đang tải...' : 'Thêm Slide'}
             </Button>
 
-            {/* Add Slide Modal */}
             {/* Add Slide Modal */}
             <Modal show={showAddModal} onHide={handleCloseAdd}>
                 <Modal.Header closeButton>
@@ -246,7 +244,6 @@ const SlideshowManagement = () => {
             </Modal>
 
             {/* Edit Slide Modal */}
-            {/* Edit Slide Modal */}
             <Modal show={showEditModal} onHide={handleCloseEdit}>
                 <Modal.Header closeButton>
                     <Modal.Title>Sửa Slide</Modal.Title>
@@ -255,7 +252,7 @@ const SlideshowManagement = () => {
                     <Form>
                         <Form.Group controlId="formSlideTitle">
                             <Form.Label>Tiêu đề Slide</Form.Label>
-                            <Form.Control
+                            < Form.Control
                                 type="text"
                                 placeholder="Nhập tiêu đề"
                                 name="title"
@@ -319,7 +316,6 @@ const SlideshowManagement = () => {
                         <th>URL Liên kết</th>
                         <th>Mô tả</th>
                         <th>Kích hoạt</th>
-                        <th>Ngày tạo</th>
                         <th>Thao tác</th>
                     </tr>
                 </thead>
@@ -336,7 +332,6 @@ const SlideshowManagement = () => {
                                     />
                                 )}
                             </td>
-
                             <td>{shortenUrl(slide.link_url)}</td>
                             <td>{slide.description}</td>
                             <td>
@@ -344,7 +339,6 @@ const SlideshowManagement = () => {
                                     {slide.is_active ? 'Kích hoạt' : 'Không kích hoạt'}
                                 </Button>
                             </td>
-                            <td>{slide.created_at}</td>
                             <td>
                                 <Button variant="danger" onClick={() => handleDeleteSlide(slide.id)}>Xóa</Button>
                                 <Button variant="warning" onClick={() => handleShowEdit(slide)}>Sửa</Button>
