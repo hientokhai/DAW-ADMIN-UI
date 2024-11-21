@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Button, Modal, Form, Table } from 'react-bootstrap';
 import styled from 'styled-components';
-import SlideApi from 'api/SlideApi'; // Thay đổi đường dẫn nếu cần
+import SlideApi from 'api/SlideApi';
+
 
 const StyledTable = styled(Table)`
   td, th {
@@ -81,14 +82,26 @@ const SlideshowManagement = () => {
     const handleAddSlide = async () => {
         setIsLoading(true);
         try {
-            const response = await SlideApi.store(newSlide);
+            const formData = new FormData();
+            formData.append('title', newSlide.title);
+            if (newSlide.image_url instanceof File) {
+                formData.append('image_url', newSlide.image_url); // If image_url is a file
+            }
+            formData.append('link_url', newSlide.link_url);
+            formData.append('description', newSlide.description);
+            formData.append('is_active', newSlide.is_active); // Ensure this is a boolean
+
+            const response = await SlideApi.store(formData);
             setSlides([...slides, response.data]);
             resetNewSlide();
             handleCloseAdd();
-            setErrorMessage(null);
         } catch (error) {
-            console.error('Error adding slide:', error);
-            setErrorMessage('Lỗi khi thêm slide.');
+            console.error('Error adding slide:', error.response ? error.response.data : error.message);
+            if (error.response && error.response.data && error.response.data.errors) {
+                setErrorMessage(error.response.data.errors.title[0]);
+            } else {
+                setErrorMessage('Lỗi khi thêm slide.');
+            }
         } finally {
             setIsLoading(false);
         }
@@ -97,12 +110,18 @@ const SlideshowManagement = () => {
     const handleEditSlide = async () => {
         setIsLoading(true);
         try {
-            const response = await SlideApi.update(newSlide.id, newSlide);
-            setSlides(slides.map((slide) =>
-                slide.id === newSlide.id ? response.data : slide
-            ));
+            const formData = new FormData();
+            formData.append('title', newSlide.title);
+            if (newSlide.image_url instanceof File) {
+                formData.append('image_url', newSlide.image_url); // Nếu image_url là một tệp tin
+            }
+            formData.append('link_url', newSlide.link_url);
+            formData.append('description', newSlide.description);
+            formData.append('is_active', newSlide.is_active);
+
+            const response = await SlideApi.update(newSlide.id, formData);
+            setSlides(slides.map((slide) => (slide.id === newSlide.id ? response.data : slide)));
             handleCloseEdit();
-            setErrorMessage(null);
         } catch (error) {
             console.error('Error editing slide:', error);
             setErrorMessage('Lỗi khi sửa slide.');
@@ -130,9 +149,8 @@ const SlideshowManagement = () => {
     const handleDeleteSlide = async (id) => {
         setIsLoading(true);
         try {
-            await SlideApi.delete(id);
+            await SlideApi.destroy(id);
             setSlides(slides.filter(slide => slide.id !== id));
-            setErrorMessage(null);
         } catch (error) {
             console.error('Error deleting slide:', error);
             setErrorMessage('Lỗi khi xóa slide.');
@@ -154,6 +172,7 @@ const SlideshowManagement = () => {
         // Giả lập việc rút ngắn URL, có thể sử dụng một API thực tế để rút ngắn URL
         return url.length > 30 ? `${url.substring(0, 27)}...` : url;
     };
+
     return (
         <div>
             {errorMessage && <div className="alert alert-danger">{errorMessage}</div>}
@@ -161,6 +180,7 @@ const SlideshowManagement = () => {
                 {isLoading ? 'Đang tải...' : 'Thêm Slide'}
             </Button>
 
+            {/* Add Slide Modal */}
             {/* Add Slide Modal */}
             <Modal show={showAddModal} onHide={handleCloseAdd}>
                 <Modal.Header closeButton>
@@ -207,6 +227,14 @@ const SlideshowManagement = () => {
                                 onChange={handleChange}
                             />
                         </Form.Group>
+                        <Form.Group controlId="formSlideActive">
+                            <Form.Check
+                                type="checkbox"
+                                label="Kích hoạt"
+                                checked={newSlide.is_active}
+                                onChange={() => setNewSlide({ ...newSlide, is_active: !newSlide.is_active })}
+                            />
+                        </Form.Group>
                     </Form>
                 </Modal.Body>
                 <Modal.Footer>
@@ -217,6 +245,7 @@ const SlideshowManagement = () => {
                 </Modal.Footer>
             </Modal>
 
+            {/* Edit Slide Modal */}
             {/* Edit Slide Modal */}
             <Modal show={showEditModal} onHide={handleCloseEdit}>
                 <Modal.Header closeButton>
@@ -268,7 +297,7 @@ const SlideshowManagement = () => {
                                 type="checkbox"
                                 label="Kích hoạt"
                                 checked={newSlide.is_active}
-                                on Change={() => setNewSlide({ ...newSlide, is_active: !newSlide.is_active })}
+                                onChange={() => setNewSlide({ ...newSlide, is_active: !newSlide.is_active })}
                             />
                         </Form.Group>
                     </Form>

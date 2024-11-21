@@ -8,8 +8,7 @@ const SlideApi = {
         return axiosClient.get(url, { params });
     },
 
-
-    // Tạo kích thước mới
+    //thêm slideshow
     store: (data) => {
         const url = 'http://127.0.0.1:8000/api/slideshows/store';
         return axiosClient.post(url, data);
