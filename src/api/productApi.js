@@ -13,7 +13,6 @@ const ProductApi = {
         },
     });
 },
-
   getColors: (params) => {
     const url = 'http://127.0.0.1:8000/api/colors/';
     return axiosClient.get(url, { params });

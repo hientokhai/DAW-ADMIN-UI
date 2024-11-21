@@ -4,18 +4,18 @@ import { useNavigate } from 'react-router-dom';
 import ProductApi from 'api/productApi';
 
 const ProductsPage = () => {
-  const [products, setProducts] = useState([]);
-  // const [showModal, setShowModal] = useState(false);
-  // const [currentProduct, setCurrentProduct] = useState(null);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filteredProducts, setFilteredProducts] = useState([]);
-  const [expandedProductId, setExpandedProductId] = useState(null);
+    const [products, setProducts] = useState([]);
+    // const [showModal, setShowModal] = useState(false);
+    // const [currentProduct, setCurrentProduct] = useState(null);
+    const [searchTerm, setSearchTerm] = useState("");
+    const [filteredProducts, setFilteredProducts] = useState([]);
+    const [expandedProductId, setExpandedProductId] = useState(null);
     const [sizes, setSizes] = useState([]);
-  const navigate = useNavigate();
-  useEffect(() => {
-    fetchProducts();
+    const navigate = useNavigate();
+    useEffect(() => {
+        fetchProducts();
         fetchSizes();
-  }, []);
+    }, []);
 
   useEffect(() => {
     handleSearch(searchTerm);
