@@ -3,7 +3,7 @@ import { Row, Col, Card, Tabs, Tab } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import avatar1 from '../../assets/images/user/avatar-1.jpg';
 import OrderApi from 'api/orderApi';
-import CustomerApi from 'api/customerApi';
+import CustomerApi from 'api/customerApi'; // API mới để lấy danh sách khách hàng
 
 const DashDefault = () => {
     const [orders, setOrders] = useState([]);
@@ -113,25 +113,27 @@ const DashDefault = () => {
     };
 
     const calculateCustomerStats = (customers) => {
-        const today = new Date().toISOString().split('T')[0]; // Ngày hôm nay
-        let totalCustomers = 0;
-        let newCustomersToday = 0;
-
-        customers.forEach((customer) => {
-            if (customer.role === 'customer') {
-                totalCustomers += 1;
-
-                const customerCreatedDate = new Date(customer.created_at).toISOString().split('T')[0];
-                if (customerCreatedDate === today) {
-                    newCustomersToday += 1;
-                }
-            }
-        });
-
-        setTotalCustomers(totalCustomers);
-        setNewCustomersToday(newCustomersToday);
-    };
-
+      const today = new Date().toISOString().split('T')[0]; // Ngày hôm nay
+      let totalCustomers = 0;
+      let newCustomersToday = 0;
+  
+      customers.forEach((customer) => {
+          if (customer.role === 'customer') {
+              totalCustomers += 1;
+  
+              // Kiểm tra nếu created_at hợp lệ trước khi sử dụng
+              if (customer.created_at && !isNaN(new Date(customer.created_at))) {
+                  const customerCreatedDate = new Date(customer.created_at).toISOString().split('T')[0];
+                  if (customerCreatedDate === today) {
+                      newCustomersToday += 1;
+                  }
+              }
+          }
+      });
+  
+      setTotalCustomers(totalCustomers);
+      setNewCustomersToday(newCustomersToday);
+  };
     const orderStats = [
         { title: 'Đơn hàng chờ xử lý', value: totals["Chờ xử lý"], icon: 'hourglass', class: 'bg-warning' },
         { title: 'Đơn hàng đang vận chuyển', value: totals["Đang vận chuyển"], icon: 'truck', class: 'bg-info' },
@@ -216,15 +218,15 @@ const DashDefault = () => {
                             <Tab eventKey="week" title="Tuần này">
                                 {tabContent}
                             </Tab>
-                            <Tab eventKey="all" title="Tất cả">
-                                {tabContent}
-                            </Tab>
-                        </Tabs>
-                    </Card>
-                </Col>
-            </Row>
-        </React.Fragment>
-    );
+              <Tab eventKey="all" title="Tất cả">
+                {tabContent}
+              </Tab>
+            </Tabs>
+          </Card>
+        </Col>
+      </Row>
+    </React.Fragment>
+  );
 };
 
 export default DashDefault;
