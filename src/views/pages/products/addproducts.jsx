@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Button, Form, Card, Table } from 'react-bootstrap';
 import ProductApi from 'api/productApi'; // Import API để giao tiếp với backend
-import axios from 'axios';
 
 const AddProductsPage = () => {
     const [products, setProducts] = useState([]);        // Dữ liệu sản phẩm
@@ -40,7 +39,11 @@ const AddProductsPage = () => {
     // Fetch các kích cỡ
     const fetchSizes = async () => {
         const response = await ProductApi.getSizes();
-        setSizes(response.data);
+        if (response.data && response.data.length > 0) {
+            setSizes(response.data);  // Cập nhật mảng sizes
+        } else {
+            setSizes([{ id: 0, size_name: 'Không có kích cỡ' }]);  // Cung cấp giá trị mặc định
+        }
     };
 
     // Xử lý thay đổi trường dữ liệu
@@ -53,6 +56,7 @@ const AddProductsPage = () => {
     const handleVariantChange = (index, field, value) => {
         const updatedVariants = [...newProduct.productVariants];
         updatedVariants[index][field] = value;
+        console.log('Updated variant:', updatedVariants[index]); // Log thông tin của biến thể
         setNewProduct({ ...newProduct, productVariants: updatedVariants });
     };
 
@@ -73,41 +77,49 @@ const AddProductsPage = () => {
     };
 
     // Xử lý khi chọn ảnh và upload lên Cloudinary
-    const handleImageChange = async (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            const formData = new FormData();
-            formData.append('file', file);
-            formData.append('upload_preset', 'ml_default'); // Thay YOUR_UPLOAD_PRESET bằng preset của bạn
-            formData.append('cloud_name', 'dfikfmyvp'); // Thay YOUR_CLOUD_NAME bằng tên Cloudinary của bạn
-
-            try {
-                const res = await axios.post('https://api.cloudinary.com/v1_1/dfikfmyvp/image/upload', formData);
-                const imageUrl = res.data.secure_url;
-                setNewProduct({
-                    ...newProduct,
-                    images: [...newProduct.images, imageUrl],  // Lưu ảnh URL vào images
-                });
-            } catch (err) {
-                console.error('Error uploading image', err);
-            }
+    const handleImageChange = (e) => {  
+        const files = Array.from(e.target.files);
+        const validImages = files.filter(file => file.type.startsWith('image/')); // Lọc file không phải ảnh
+        if (validImages.length) {
+            setNewProduct({
+                ...newProduct,
+                images: [...newProduct.images, ...validImages],
+            });
+        } else {
+            alert("Vui lòng chọn file ảnh hợp lệ!");
         }
     };
 
     const handleAddNewProduct = async () => {
-        // Kiểm tra thông tin form
         if (!newProduct.name || !newProduct.category_id || !newProduct.ori_price || !newProduct.sel_price) {
             alert('Vui lòng điền đầy đủ thông tin sản phẩm!');
             return;
         }
     
-        try {
-            // Gửi yêu cầu thêm sản phẩm mới lên API
-            const response = await ProductApi.addProduct(newProduct);
+        const formData = new FormData();
+        formData.append('name', newProduct.name);
+        formData.append('category_id', newProduct.category_id);
+        formData.append('ori_price', newProduct.ori_price);
+        formData.append('sel_price', newProduct.sel_price);
+        formData.append('description', newProduct.description);
     
+        // Thêm hình ảnh
+        newProduct.images.forEach((image, index) => {
+            formData.append(`images[${index}]`, image);
+        });
+    
+        // Thêm các biến thể
+        newProduct.productVariants.forEach((variant, index) => {
+            formData.append(`productVariants[${index}][color_id]`, variant.color_id);
+            formData.append(`productVariants[${index}][size_id]`, variant.size_id);
+            formData.append(`productVariants[${index}][quantity]`, variant.quantity);
+        });
+    
+        try {
+            const response = await ProductApi.addProduct(formData);
             if (response.status === 201) {
-                setProducts([...products, { ...newProduct, id: products.length + 1 }]);
                 alert('Sản phẩm đã được thêm thành công!');
+                setProducts([...products, response.data]); // Thêm sản phẩm mới vào danh sách
                 setNewProduct({
                     name: '',
                     category_id: '',
@@ -217,15 +229,13 @@ const AddProductsPage = () => {
                             <Form.Control
                                 as="select"
                                 value={variant.size_id}
-                                onChange={(e) =>
-                                    handleVariantChange(index, 'size_id', e.target.value)
-                                }
+                                onChange={(e) =>handleVariantChange(index, 'size_id', e.target.value)}
                                 className="mb-2"
                             >
                                 <option value="">Chọn kích cỡ</option>
                                 {sizes?.map((size) => (
-                                    <option key={size.id} value={size.id}>
-                                        {size.size_name}
+                                    <option key={size.id} value={size.size_id}>
+                                        {size.name}
                                     </option>
                                 ))}
                             </Form.Control>
@@ -307,35 +317,29 @@ const AddProductsPage = () => {
                             </tr>
                         </thead>
                         <tbody>
-                            {products.map((product, index) => (
+                            {products?.map((product, index) => (
                                 <tr key={index}>
                                     <td>{product.name}</td>
-                                    <td>{categories.find((cat) => cat.id === product.category_id)?.name}</td>
+                                    <td>{categories?.find((cat) => cat.id === product.category_id)?.name || 'Không xác định'}</td>
                                     <td>
-                                        {product.images.length > 0 && (
-                                            <img src={product.images[0]} alt="Product" width="100" />
-                                        )}
+                                        {product.images?.length > 0 ? (
+                                            <img src={URL.createObjectURL(product.images[0])} alt="Product" width="100" />
+                                        ) : 'Không có ảnh'}
                                     </td>
                                     <td>
-                                        {product.productVariants
-                                            .map(productVariants => {
-                                                const color = colors.find(color => color.id === productVariants.color_id);
-                                                return color ? color.color_name : '';
-                                            })
-                                            .join(', ')}
+                                        {product.productVariants?.map((productVariant) => {
+                                            const color = colors?.find((color) => color.id === productVariant.color_id);
+                                            return color?.color_name || 'Không xác định';
+                                        }).join(', ') || 'Không có biến thể'}
                                     </td>
                                     <td>
-                                        {product.productVariants
-                                            .map(productVariants => {
-                                                const size = sizes.find(size => size.id === productVariants.size_id);
-                                                return size ? size.size_name : '';
-                                            })
-                                            .join(', ')}
+                                        {product.productVariants?.map((productVariant) => {
+                                            const size = sizes?.find((size) => size.id === productVariant.size_id);
+                                            return size?.size_name || 'Không xác định';
+                                        }).join(', ') || 'Không có kích cỡ'}
                                     </td>
                                     <td>
-                                        {product.productVariants
-                                            .map(productVariants => productVariants.quantity)
-                                            .join(', ')}
+                                        {product.productVariants?.map((productVariant) => productVariant.quantity).join(', ') || '0'}
                                     </td>
                                     <td>{product.ori_price}</td>
                                     <td>{product.sel_price}</td>

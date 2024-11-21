@@ -1,21 +1,18 @@
 import axiosClient from './axiosClient';
-
+import axios from 'axios';
 const ProductApi = {
   getAll: (params) => {
     const url = 'http://127.0.0.1:8000/api/products/';
     return axiosClient.get(url, { params });
   },
 
-  addProduct: async (newProduct) => {
-    try {
-      // Gửi yêu cầu thêm sản phẩm lên backend
-      const response = await axios.post('http://127.0.0.1:8000/api/products', newProduct);
-      return response;
-    } catch (error) {
-      console.error('Error adding product:', error);
-      throw error;
-    }
-  },
+  addProduct: async (data) => {
+    return axios.post(`http://127.0.0.1:8000/api/products`, data, {
+        headers: {
+            'Content-Type': 'multipart/form-data', // Đảm bảo gửi dạng FormData
+        },
+    });
+},
 
   getColors: (params) => {
     const url = 'http://127.0.0.1:8000/api/colors/';
