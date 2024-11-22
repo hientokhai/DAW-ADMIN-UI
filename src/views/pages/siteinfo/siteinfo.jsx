@@ -1,21 +1,37 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button, Card, Form } from 'react-bootstrap';
+import axios from 'axios';
+import SiteInfoApi from "../../../api/siteinfoApi";
+
 
 const SiteSettingsPage = () => {
     const [isEditing, setIsEditing] = useState(false); // State kiểm tra chế độ sửa
     const [siteInfo, setSiteInfo] = useState({
-        shop_name: 'MENS STYLE',
-        address: '84 NBT,P12, TB',
-        phone_number: '0382488083',
-        email: 'menstyle@gmail.com',
-        description: 'shop uy tín và chất lượng nhất vn',
-        logo_header_url: 'https://media.gq.com/photos/66bd04be6ceae75b0ef0564b/master/w_120,c_limit/Conde+Nast_r1_04L_4108_1x1-2loc11222o%20(1).jpg',
-        logo_footer_url: 'https://media.gq.com/photos/66bd04be6ceae75b0ef0564b/master/w_120,c_limit/Conde+Nast_r1_04L_4108_1x1-2loc11222o%20(1).jpg',
-        social_facebook: 'https://media.gq.com/photos/66bd04be6ceae75b0ef0564b/master/w_120,c_limit/Conde+Nast_r1_04L_4108_1x1-2loc11222o%20(1).jpg',
-        social_instagram: 'https://media.gq.com/photos/66bd04be6ceae75b0ef0564b/master/w_120,c_limit/Conde+Nast_r1_04L_4108_1x1-2loc11222o%20(1).jpg',
-        social_twitter: 'https://media.gq.com/photos/66bd04be6ceae75b0ef0564b/master/w_120,c_limit/Conde+Nast_r1_04L_4108_1x1-2loc11222o%20(1).jpg',
-        social_linkedin: 'https://media.gq.com/photos/66bd04be6ceae75b0ef0564b/master/w_120,c_limit/Conde+Nast_r1_04L_4108_1x1-2loc11222o%20(1).jpg'
+        shop_name: '',
+        address: '',
+        phone_number: '',
+        email: '',
+        description: '',
+        logo_header_url: '',
+        logo_footer_url: '',
+        social_facebook: '',
+        social_instagram: '',
+        social_twitter: '',
+        social_linkedin: ''
     });
+
+    // Lấy dữ liệu từ API khi component được mount
+    useEffect(() => {
+        axios.get('http://127.0.0.1:8000/api/site-info')
+            .then((response) => {
+                // Cập nhật state với dữ liệu API
+                setSiteInfo(response.data.data);
+                console.log(response.data.data);
+            })
+            .catch((error) => {
+                console.error("Lỗi khi lấy dữ liệu API: ", error);
+            });
+    }, []);
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
@@ -40,9 +56,9 @@ const SiteSettingsPage = () => {
     };
 
     const handleSaveChanges = () => {
-        // Đây là nơi bạn có thể gửi thông tin cập nhật lên server.
+        // Gửi thông tin cập nhật lên server (ví dụ thông qua PUT request)
         alert('Thông tin website đã được cập nhật!');
-        console.log(siteInfo); // Hiển thị thông tin đã thay đổi trong console
+        // console.log(siteInfo); // Hiển thị thông tin đã thay đổi trong console
         setIsEditing(false); // Tắt chế độ sửa sau khi lưu
     };
 
@@ -120,7 +136,6 @@ const SiteSettingsPage = () => {
 
                             <Form.Group controlId="logo_header_url">
                                 <Form.Label className="font-weight-bold">Logo Header</Form.Label>
-                                {/* Hiển thị hình ảnh nếu có URL */}
                                 {siteInfo.logo_header_url && <img src={siteInfo.logo_header_url} alt="Logo Header" style={{ width: '100px', height: 'auto' }} />}
                                 <Form.Control
                                     type="file"
@@ -128,12 +143,11 @@ const SiteSettingsPage = () => {
                                     className="custom-file-input"
                                     style={{ marginTop: '10px' }}
                                 />
-                                <div style={{ marginTop: '5px' }}>Chọn tệp</div>
+                                <div style={{ marginTop: '5px' }}></div>
                             </Form.Group>
 
                             <Form.Group controlId="logo_footer_url">
                                 <Form.Label className="font-weight-bold">Logo Footer</Form.Label>
-                                {/* Hiển thị hình ảnh nếu có URL */}
                                 {siteInfo.logo_footer_url && <img src={siteInfo.logo_footer_url} alt="Logo Footer" style={{ width: '100px', height: 'auto' }} />}
                                 <Form.Control
                                     type="file"
@@ -141,12 +155,11 @@ const SiteSettingsPage = () => {
                                     className="custom-file-input"
                                     style={{ marginTop: '10px' }}
                                 />
-                                <div style={{ marginTop: '5px' }}>Chọn tệp</div>
+                                <div style={{ marginTop: '5px' }}></div>
                             </Form.Group>
 
                             <Form.Group controlId="social_facebook">
                                 <Form.Label className="font-weight-bold">Facebook</Form.Label>
-                                {/* Hiển thị hình ảnh nếu có URL */}
                                 {siteInfo.social_facebook && <img src={siteInfo.social_facebook} alt="Facebook" style={{ width: '101px', height: 'auto' }} />}
                                 <Form.Control
                                     type="file"
@@ -154,46 +167,59 @@ const SiteSettingsPage = () => {
                                     className="custom-file-input"
                                     style={{ marginTop: '10px' }}
                                 />
-                                <div style={{ marginTop: '5px' }}>Chọn tệp</div>
-                            </Form.Group>
-
-                            <Form.Group controlId="social_instagram">
+                                <div style={{ marginTop: '5px' }}></div>
+                            </Form.Group><Form.Group controlId="social_instagram">
                                 <Form.Label className="font-weight-bold">Instagram</Form.Label>
-                                {/* Hiển thị hình ảnh nếu có URL */}
-                                {siteInfo.social_instagram && <img src={siteInfo.social_instagram} alt="Instagram" style={{ width: '101px', height: 'auto' }} />}
+                                {siteInfo.social_instagram && (
+                                    <img
+                                        src={siteInfo.social_instagram}
+                                        alt="Instagram"
+                                        style={{ width: '100px', height: 'auto' }}
+                                    />
+                                )}
                                 <Form.Control
                                     type="file"
                                     onChange={(e) => handleImageChange(e, 'social_instagram')}
                                     className="custom-file-input"
                                     style={{ marginTop: '10px' }}
                                 />
-                                <div style={{ marginTop: '5px' }}>Chọn tệp</div>
+                                <div style={{ marginTop: '5px' }}></div>
                             </Form.Group>
 
                             <Form.Group controlId="social_twitter">
                                 <Form.Label className="font-weight-bold">Twitter</Form.Label>
-                                {/* Hiển thị hình ảnh nếu có URL */}
-                                {siteInfo.social_twitter && <img src={siteInfo.social_twitter} alt="Twitter" style={{ width: '101px', height: 'auto' }} />}
+                                {siteInfo.social_twitter && (
+                                    <img
+                                        src={siteInfo.social_twitter}
+                                        alt="Twitter"
+                                        style={{ width: '100px', height: 'auto' }}
+                                    />
+                                )}
                                 <Form.Control
                                     type="file"
                                     onChange={(e) => handleImageChange(e, 'social_twitter')}
                                     className="custom-file-input"
                                     style={{ marginTop: '10px' }}
                                 />
-                                <div style={{ marginTop: '5px' }}>Chọn tệp</div>
+                                <div style={{ marginTop: '5px' }}></div>
                             </Form.Group>
 
                             <Form.Group controlId="social_linkedin">
                                 <Form.Label className="font-weight-bold">LinkedIn</Form.Label>
-                                {/* Hiển thị hình ảnh nếu có URL */}
-                                {siteInfo.social_linkedin && <img src={siteInfo.social_linkedin} alt="LinkedIn" style={{ width: '101px', height: 'auto' }} />}
+                                {siteInfo.social_linkedin && (
+                                    <img
+                                        src={siteInfo.social_linkedin}
+                                        alt="LinkedIn"
+                                        style={{ width: '100px', height: 'auto' }}
+                                    />
+                                )}
                                 <Form.Control
                                     type="file"
                                     onChange={(e) => handleImageChange(e, 'social_linkedin')}
                                     className="custom-file-input"
                                     style={{ marginTop: '10px' }}
                                 />
-                                <div style={{ marginTop: '5px' }}>Chọn tệp</div>
+                                <div style={{ marginTop: '5px' }}></div>
                             </Form.Group>
 
 
@@ -242,7 +268,6 @@ const SiteSettingsPage = () => {
                                     style={{ width: '100px', height: 'auto', display: 'inline-block', marginLeft: '10px' }}
                                 />
                             </p>
-
                             <p>
                                 <strong style={{ fontWeight: 'bold', color: '#333' }}>Logo Instagram:</strong>
                                 <img
@@ -272,6 +297,7 @@ const SiteSettingsPage = () => {
                                     style={{ width: '100px', height: 'auto', display: 'inline-block', marginLeft: '10px' }}
                                 />
                             </p>
+
 
                             <Button variant="primary" onClick={() => setIsEditing(true)} className="custom-btn">
                                 Chỉnh sửa
