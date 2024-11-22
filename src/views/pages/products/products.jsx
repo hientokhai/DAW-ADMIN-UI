@@ -1,313 +1,273 @@
-import { useState, useEffect } from 'react';
-import { Button, Card, Form, Modal, Table, InputGroup } from 'react-bootstrap';
+/* eslint-disable jsx-a11y/no-static-element-interactions */
+import React, { useState, useEffect } from 'react';
+import { Button, Card, Form, Table, InputGroup } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
+import ProductApi from 'api/productApi';
 
 const ProductsPage = () => {
-    const [products, setProducts] = useState([]);
-    const [showModal, setShowModal] = useState(false);
-    const [currentProduct, setCurrentProduct] = useState(null);
-    const [searchTerm, setSearchTerm] = useState("");
-    const [filteredProducts, setFilteredProducts] = useState([]);
-    const [expandedProductId, setExpandedProductId] = useState(null); // Track the expanded product
-    const navigate = useNavigate();
+  const [products, setProducts] = useState([]);
+  // const [showModal, setShowModal] = useState(false);
+  // const [currentProduct, setCurrentProduct] = useState(null);
+  // const [searchTerm, setSearchTerm] = useState('');
+  const [filteredProducts, setFilteredProducts] = useState([]);
+  const [expandedProductId, setExpandedProductId] = useState(null);
+  const [sizes, setSizes] = useState([]);
+  const navigate = useNavigate();
 
-    useEffect(() => {
+  const [searchParams, setSearchParams] = useState('');
+
+  const handleInputChange = (e) => {
+    const { value } = e.target;
+    setSearchParams(value);
+  };
+
+  const handleSearch = async () => {
+    try {
+      const response = await ProductApi.search(searchParams);
+      setFilteredProducts(response.data);
+    } catch (err) {
+      alert('Lỗi tìm kiếm');
+    }
+  };
+
+  useEffect(() => {
+    fetchProducts();
+    fetchSizes();
+  }, []);
+
+  // Fetch dữ liệu kích thước từ API
+  const fetchSizes = async () => {
+    try {
+      const response = await ProductApi.getSizes(); // Giả sử API trả về một danh sách các kích thước
+      setSizes(response.data);
+    } catch (error) {
+      console.error('Lỗi khi lấy danh sách kích thước:', error);
+    }
+  };
+  const fetchProducts = async () => {
+    try {
+      const response = await ProductApi.getAll();
+      const productsData = response.data.map((product) => ({
+        ...product,
+        product_variants: product.product_variants || [] // Ensure product_variants exists
+      }));
+      setProducts(productsData);
+      setFilteredProducts(productsData);
+    } catch (error) {
+      console.error('Lỗi khi lấy danh sách sản phẩm:', error);
+    }
+  };
+
+  const getSizeNameById = (sizeId) => {
+    const size = sizes.find((s) => s.id === sizeId);
+    return size ? size.size_name : 'Không xác định'; // Trả về tên size hoặc 'Không xác định' nếu không tìm thấy
+  };
+
+  // const fetchProductList = async () => {
+  //     try {
+  //       const response = await ProductApi.getAll();
+  //       setProducts(response.data);
+  //     } catch (error) {
+  //       console.log('fail', error);
+  //     }
+  //   };
+
+  //   useEffect(() => {
+  //     fetchProductList();
+  //   }, []);
+
+  // const handleSearch = (term) => {
+  //   setSearchTerm(term);
+  //   if (!products.length) return; // Nếu products rỗng, dừng tìm kiếm
+  //   if (term.trim() === '') {
+  //     setFilteredProducts(products);
+  //   } else {
+  //     const filtered = products.filter((product) => product.name.toLowerCase().includes(term.toLowerCase()));
+  //     setFilteredProducts(filtered);
+  //   }
+  // };
+
+  const handleDelete = async (id) => {
+    const userConfirmed = window.confirm('Bạn có chắc chắn muốn xóa sản phẩm này không?');
+
+    if (userConfirmed) {
+      try {
+        await ProductApi.delete(id);
+        alert('Xóa sản phẩm thành công!');
         fetchProducts();
-    }, []);
+      } catch (error) {
+        alert('Có lỗi xảy ra khi xóa.');
+      }
+    } else {
+      alert('Hủy thao tác xóa.');
+    }
+  };
 
-    useEffect(() => {
-        handleSearch(searchTerm);
-    }, [products, searchTerm]);
+  const handleAddProduct = () => {
+    navigate('/app/products/create');
+  };
 
-    const fetchProducts = () => {
-        const fakeData = [
-            {
-                id: 1,
-                createdAt: '11/12/2024',
-                url: 'hehe',
-                category: 'Quần',
-                supplier: 'Nhà cung cấp 1',
-                name: 'LEGGINGS',
-                variants: [
-                    { color: 'Đỏ', size: 'S', quantity: 30, importprice: '400.000đ', sellprice: '600.000đ' },
-                    { color: 'Đỏ', size: 'M', quantity: 50, importprice: '400.000đ', sellprice: '600.000đ' },
-                    { color: 'Xanh', size: 'L', quantity: 20, importprice: '400.000đ', sellprice: '600.000đ' },
-                ],
-                description: '123 Đường ABC, Quận 1, TP.HCM',
-                status: 'Còn hàng',
-                is_featured: 'checked',
-            },
-            {
-                id: 2,
-                createdAt: '11/12/2024',
-                url: 'hehe',
-                category: 'Áo',
-                supplier: 'Nhà cung cấp 2',
-                name: 'Áo Tank Top',
-                variants: [
-                    { color: 'Đỏ', size: 'S', quantity: 0, importprice: '400.000đ', sellprice: '600.000đ' },
-                    { color: 'Đỏ', size: 'M', quantity: 1, importprice: '400.000đ', sellprice: '600.000đ' },
-                    { color: 'Xanh', size: 'L', quantity: 2, importprice: '400.000đ', sellprice: '600.000đ' },
-                ],
-                description: '123 Đường ABC, Quận 1, TP.HCM',
-                status: 'Hết hàng',
-                is_featured: 'checked',
-            },
-            {
-                id: 3,
-                createdAt: '11/12/2024',
-                url: 'hehe',
-                category: 'Giày',
-                supplier: 'Nhà cung cấp 3',
-                name: 'Addidas',
-                variants: [
-                    { color: 'Đỏ', size: '29', quantity: 20, importprice: '400.000đ', sellprice: '600.000đ' },
-                    { color: 'Đỏ', size: '30', quantity: 5, importprice: '400.000đ', sellprice: '600.000đ' },
-                    { color: 'Xanh', size: '31', quantity: 20, importprice: '400.000đ', sellprice: '600.000đ' },
-                ],
-                description: '123 Đường ABC, Quận 1, TP.HCM',
-                status: 'Còn hàng',
-                is_featured: 'checked',
-            },
-            // Các sản phẩm khác
-        ];
-        setProducts(fakeData);
-    };
-    const getProductStatus = (variants) => {
-        // Kiểm tra xem có bất kỳ biến thể nào có số lượng lớn hơn 0
-        const isAvailable = variants.some(variant => variant.quantity > 0);
-        return isAvailable ? "Còn hàng" : "Hết hàng";
-    };
+  const toggleVariants = async (productId) => {
+    if (expandedProductId === productId) {
+      setExpandedProductId(null); // Thu gọn nếu đang mở
+      return;
+    }
 
-    const handleSearch = (term) => {
-        setSearchTerm(term);
-        if (term.trim() === "") {
-            setFilteredProducts(products);
-        } else {
-            const filtered = products.filter((product) =>
-                product.name.toLowerCase().includes(term.toLowerCase())
-            );
-            setFilteredProducts(filtered);
-        }
-    };
+    try {
+      const response = await ProductApi.getById(productId);
+      const productDetails = response.data || {};
+      const { product, sizes = [], colors = [] } = productDetails;
 
-    // Hiển thị modal chỉnh sửa khi nhấn vào nút "Cập nhật"
-    const handleEditProduct = (product) => {
-        setCurrentProduct(product);
-        setShowModal(true);
-    };
+      if (!product || !Array.isArray(product.productVariants)) {
+        //kiểm tra xem một giá trị có phải là một mảng (Array) hay không
+        console.error('Không tìm thấy thông tin sản phẩm hoặc variants không hợp lệ:', productDetails);
+        return;
+      }
 
-    // Xử lý đóng modal
-    const handleClose = () => {
-        setShowModal(false);
-        setCurrentProduct(null);
-    };
+      // Gắn thêm thông tin tên size và màu sắc
+      const updatedVariants = product.productVariants.map((variant) => ({
+        ...variant,
+        size_name: sizes.find((size) => size.id === variant.size_id)?.size_name || 'Không xác định',
+        color_name: colors.find((color) => color.id === variant.color_id)?.color_name || 'Không xác định'
+      }));
 
-    // Xử lý khi người dùng thay đổi thông tin sản phẩm trong modal
-    const handleInputChange = (e) => {
-        const { name, value } = e.target;
-        if (currentProduct) {
-            setCurrentProduct({ ...currentProduct, [name]: value });
-        }
-    };
+      // Cập nhật danh sách sản phẩm trong state
+      setFilteredProducts((prevProducts) =>
+        prevProducts.map((product) => (product.id === productId ? { ...product, product_variants: updatedVariants } : product))
+      );
 
-    const handleSaveProductChange = () => {
-        if (currentProduct) {
-            setProducts((prevProducts) =>
-                prevProducts.map((product) =>
-                    product.id === currentProduct.id ? { ...product, ...currentProduct } : product
-                )
-            );
-        }
-        handleClose();
-        alert('Thông tin sản phẩm đã được cập nhật!');
-    };
+      setExpandedProductId(productId); // Mở rộng chi tiết sản phẩm
+    } catch (error) {
+      console.error('Lỗi khi lấy chi tiết sản phẩm:', error);
+    }
+  };
 
-    // Điều hướng sang trang thêm sản phẩm mới
-    const handleAddProduct = () => {
-        navigate(`/app/products/addproducts`);
-    };
+  return (
+    <>
+      <InputGroup className="mb-3">
+        <Form.Control placeholder="Nhập vào từ khóa tìm kiếm" value={searchParams} onChange={handleInputChange} />
+        <Button variant="dark" id="button-addon1" onClick={handleSearch}>
+          Tìm kiếm
+        </Button>
+      </InputGroup>
 
-    const toggleExpandProduct = (productId) => {
-        if (expandedProductId === productId) {
-            setExpandedProductId(null);
-        } else {
-            setExpandedProductId(productId);
-        }
-    };
+      <Card>
+        <Card.Header>
+          <Card.Title as="h5">QUẢN LÝ SẢN PHẨM</Card.Title>
+        </Card.Header>
+        <Card.Body>
+          <Table responsive hover>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Ngày nhập</th>
+                <th>Hình ảnh</th>
+                <th>Loại sản phẩm</th>
+                <th>Tên sản phẩm</th>
+                <th>Thông tin sản phẩm</th>
+                <th>Giá nhập</th>
+                <th>Giá bán</th>
+                <th>Trạng thái</th>
+                <th>Thao tác</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredProducts?.length > 0 ? (
+                filteredProducts.map((product, index) => (
+                  <React.Fragment key={product.id}>
+                    <tr>
+                      <td>{index + 1}</td>
+                      <td>{product.createdAt}</td>
+                      <td>
+                        {product.images && product.images.length > 0 ? (
+                          <img src={product.images[0].image_url} alt={product.name} style={{ width: '50px', height: '50px' }} />
+                        ) : (
+                          'Không có ảnh'
+                        )}
+                      </td>
+                      <td>{product.category.name}</td>
+                      <td>
+                        {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events */}
+                        <span
+                          onClick={() => toggleVariants(product.id)}
+                          style={{
+                            cursor: 'pointer',
+                            color: 'blue',
+                            textDecoration: 'underline'
+                          }}
+                        >
+                          {product.name}
+                        </span>
+                      </td>
+                      <td>{product.description}</td>
+                      <td>{product.ori_price}</td>
+                      <td>{product.sel_price}</td>
+                      <td>{product.product_variants.length > 0 ? 'Còn hàng' : 'Hết hàng'}</td>
+                      <td>
+                        <Button variant="info" onClick={() => navigate(`/app/products/update/${product.id}`)}>
+                          Cập Nhật
+                        </Button>
+                        <Button variant="danger" onClick={() => handleDelete(product.id)}>
+                          Xóa
+                        </Button>
+                      </td>
+                    </tr>
 
-    return (
-        <>
-            <InputGroup className="mb-3">
-                <Button variant="dark" id="button-addon1" onClick={() => handleSearch(searchTerm)}>
-                    Tìm kiếm
-                </Button>
-                <Form.Control
-                    placeholder="Nhập vào từ khóa tìm kiếm"
-                    value={searchTerm}
-                    onChange={(e) => handleSearch(e.target.value)}
-                />
-            </InputGroup>
-
-            <Card>
-                <Card.Header>
-                    <Card.Title as="h5">QUẢN LÝ SẢN PHẨM</Card.Title>
-                </Card.Header>
-                <Card.Body>
-                    <Table responsive hover>
-                        <thead>
-                            <tr>
-                                <th>#</th>
-                                <th>Ngày nhập</th>
-                                <th>Hình ảnh</th>
-                                <th>Nhà cung cấp</th>
-                                <th>Loại sản phẩm</th>
-                                <th>Tên sản phẩm</th>
-                                <th>Thông tin sản phẩm</th>
-                                <th>Trạng thái</th>
-                                <th>Thao tác</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {filteredProducts.length > 0 ? (
-                                filteredProducts.map((product, index) => (
-                                    <>
-                                        <tr key={product.id}>
-                                            <td>{index + 1}</td>
-                                            <td>{product.createdAt}</td>
-                                            <td>{product.url}</td>
-                                            <td>{product.supplier}</td>
-                                            <td>{product.category}</td>
-                                            <td
-                                                style={{ cursor: 'pointer', color: 'blue' }}
-                                                onClick={() => toggleExpandProduct(product.id)}
-                                            >
-                                                {product.name}
-                                            </td>
-                                            <td>{product.description}</td>
-                                            <td style={{ color: getProductStatus(product.variants) === "Còn hàng" ? 'green' : 'red', fontWeight: 'bold' }}>
-                                            {getProductStatus(product.variants)}
-                                            </td>
-                                            <td>
-                                                <Button variant="info" onClick={() => handleEditProduct(product)}>
-                                                    Cập Nhật
-                                                </Button>
-                                            </td>
-                                        </tr>
-
-                                        {/* Table for product variants - shown when product name is clicked */}
-                                        {expandedProductId === product.id && (
-                                            <tr>
-                                                <td colSpan="8">
-                                                    <Table bordered>
-                                                        <thead>
-                                                            <tr>
-                                                                <th>Màu sắc</th>
-                                                                <th>Kích cỡ</th>
-                                                                <th>Số lượng</th>
-                                                                <th>Giá nhập</th>
-                                                                <th>Giá bán</th>
-                                                            </tr>
-                                                        </thead>
-                                                        <tbody>
-                                                            {product.variants.map((variant, idx) => (
-                                                                <tr key={idx}>
-                                                                    <td>{variant.color}</td>
-                                                                    <td>{variant.size}</td>
-                                                                    <td>{variant.quantity}</td>
-                                                                    <td>{variant.importprice}</td>
-                                                                    <td>{variant.sellprice}</td>
-                                                                </tr>
-                                                            ))}
-                                                        </tbody>
-                                                    </Table>
-                                                </td>
-                                            </tr>
-                                        )}
-                                    </>
-                                ))
+                    {expandedProductId === product.id && (
+                      <tr>
+                        <td colSpan="10">
+                          <div>
+                            <h4>Danh sách sản phẩm:</h4>
+                            {product.product_variants.length > 0 ? (
+                              <table
+                                style={{
+                                  width: '100%',
+                                  border: '1px solid #ddd',
+                                  marginTop: '10px'
+                                }}
+                              >
+                                <thead>
+                                  <tr>
+                                    <th>Kích cỡ (Size)</th>
+                                    <th>Màu sắc (Color)</th>
+                                    <th>Số lượng tồn</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {product.product_variants.map((variant) => (
+                                    <tr key={variant.id}>
+                                      <td>{variant.size_name}</td>
+                                      <td>{variant.color_name}</td>
+                                      <td>{variant.quantity}</td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
                             ) : (
-                                <tr>
-                                    <td colSpan="8" className="text-center">Không có sản phẩm</td>
-                                </tr>
+                              <p>Không có thành phần nào cho sản phẩm này.</p>
                             )}
-                        </tbody>
-                    </Table>
-                </Card.Body>
-            </Card>
-            <Button variant="warning" onClick={handleAddProduct} className="mt-3">
-                Thêm sản phẩm
-            </Button>
-
-            {/* Modal chỉnh sửa thông tin sản phẩm */}
-            <Modal show={showModal} onHide={handleClose}>
-                <Modal.Header closeButton>
-                    <Modal.Title>Chỉnh sửa thông tin sản phẩm</Modal.Title>
-                </Modal.Header>
-                <Modal.Body>
-                    {currentProduct && (
-                        <Form>
-                            <Form.Group controlId="supplier">
-                                <Form.Label>Nhà cung cấp</Form.Label>
-                                <Form.Control
-                                    type="text"
-                                    name="supplier"
-                                    value={currentProduct.supplier}
-                                    onChange={handleInputChange}
-                                />
-                            </Form.Group>
-                            {/* Hiển thị các biến thể sản phẩm */}
-                            {currentProduct.variants.map((variant, index) => (
-                                <div key={index} style={{ borderBottom: '1px solid #ddd', paddingBottom: '10px', marginBottom: '10px' }}>
-                                    <Form.Group controlId={`color-${index}`}>
-                                        <Form.Label>Màu sắc</Form.Label>
-                                        <Form.Control
-                                            type="text"
-                                            value={variant.color}
-                                            onChange={(e) => handleInputChange(e, index, 'color')}
-                                        />
-                                    </Form.Group>
-                                    <Form.Group controlId={`size-${index}`}>
-                                        <Form.Label>Kích cỡ</Form.Label>
-                                        <Form.Control
-                                            type="text"
-                                            value={variant.size}
-                                            onChange={(e) => handleInputChange(e, index, 'size')}
-                                        />
-                                    </Form.Group>
-                                    <Form.Group controlId={`quantity-${index}`}>
-                                        <Form.Label>Số lượng</Form.Label>
-                                        <Form.Control
-                                            type="number"
-                                            value={variant.quantity}
-                                            onChange={(e) => handleInputChange(e, index, 'quantity')}
-                                        />
-                                    </Form.Group>
-                                </div>
-                            ))}
-                                <Form.Group controlId="description">
-                                <Form.Label>Thông tin sản phẩm</Form.Label>
-                                <Form.Control
-                                    type="text"
-                                    name="description"
-                                    value={currentProduct.description}
-                                    onChange={handleInputChange}
-                                />
-                            </Form.Group>
-                        </Form>
+                          </div>
+                        </td>
+                      </tr>
                     )}
-                </Modal.Body>
-                <Modal.Footer>
-                    <Button variant="secondary" onClick={handleClose}>
-                        Đóng
-                    </Button>
-                    <Button variant="primary" onClick={handleSaveProductChange}>
-                        Lưu thay đổi
-                    </Button>
-                </Modal.Footer>
-            </Modal>
-        </>
-    );
+                  </React.Fragment>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="10" className="text-center">
+                    Không có sản phẩm
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </Table>
+        </Card.Body>
+      </Card>
+      <Button variant="warning" onClick={handleAddProduct} className="mt-3">
+        Thêm sản phẩm
+      </Button>
+    </>
+  );
 };
 
 export default ProductsPage;

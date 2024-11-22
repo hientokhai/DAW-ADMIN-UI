@@ -1,108 +1,91 @@
 import { useState, useEffect } from 'react';
 import { Button, Card, Form, Modal, Table } from 'react-bootstrap';
+import axios from 'axios';
+import ContactApi from "../../../api/contactApi";
 
 const ContactsPage = () => {
     const [contacts, setContacts] = useState([]);
-    const [showModal, setShowModal] = useState(false);
-    const [showResponseModal, setShowResponseModal] = useState(false); // Modal phản hồi
+    const [showResponseModal, setShowResponseModal] = useState(false);
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [currentContact, setCurrentContact] = useState(null);
 
     useEffect(() => {
         fetchContacts();
     }, []);
 
-    const fetchContacts = () => {
-        const fakeData = [
-            {
-                id: 1,
-                createdAt: '11/12/2024',
-                customerName: 'Dân Tứn',
-                email: 'DanTun@example.com',
-                phone: '0123456789',
-                address: '123 Đường ABC, Quận 1, TP.HCM',
-                subject: 'Cần tư vấn mua hàng',
-                message: 'Xin chào, tôi muốn hỏi về sản phẩm mới nhất.',
-                status: 'Chưa phản hồi',
-                response: ''
-            },
-            {
-                id: 2,
-                createdAt: '10/12/2024',
-                customerName: 'Nguyễn Văn A',
-                email: 'nguyenvana@example.com',
-                phone: '0987654321',
-                address: '456 Đường DEF, Quận 2, TP.HCM',
-                subject: 'Hỏi về tình trạng đơn hàng',
-                message: 'Đơn hàng của tôi tới đâu rồi?',
-                status: 'Đã phản hồi',
-                response: 'Đơn hàng của bạn đang được vận chuyển.'
-            },
-            {
-                id: 3,
-                createdAt: '10/12/2024',
-                customerName: 'Nguyễn Văn B',
-                email: 'nguyenvanb@example.com',
-                phone: '0987654321',
-                address: '456 Đường DEF, Quận 2, TP.HCM',
-                subject: 'Phàn nàn về dịch vụ',
-                message: 'Tôi muốn biết thêm thông tin về dịch vụ bảo hành.',
-                status: 'Chưa phản hồi',
-                response: ''
-            },
-        ];
-        setContacts(fakeData);
-    };
-
-    const handleEditContact = (contact) => {
-        setCurrentContact(contact);
-        setShowModal(true);
+    const fetchContacts = async () => {
+        try {
+            const response = await ContactApi.getAll();
+            setContacts(response.data); // Cập nhật state với dữ liệu từ API
+        } catch (error) {
+            console.error('Lỗi khi lấy danh sách liên hệ:', error);
+            // Xóa hoặc không thực hiện thông báo lỗi
+        }
     };
 
     const handleResponseContact = (contact) => {
         setCurrentContact(contact);
-        setShowResponseModal(true);
+        setShowResponseModal(true);a
     };
 
     const handleClose = () => {
-        setShowModal(false);
         setShowResponseModal(false);
+        setShowDeleteModal(false);
         setCurrentContact(null);
+    };
+
+    const handleDeleteContact = (contactId) => {
+        setShowDeleteModal(true);
+        setCurrentContact(contacts.find(contact => contact.id === contactId));
+    };
+
+    const confirmDelete = async () => {
+        try {
+            await ContactApi.delete(currentContact.id);
+            setContacts(contacts.filter(contact => contact.id !== currentContact.id));
+            handleClose();
+            alert('Liên hệ đã được xóa!');
+        } catch (error) {
+            console.error('Lỗi khi xóa liên hệ:', error);
+            alert('Không thể xóa liên hệ. Vui lòng thử lại!');
+        }
     };
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
-        if (currentContact) {
-            setCurrentContact({ ...currentContact, [name]: value });
-        }
+        setCurrentContact((prevContact) => ({
+            ...prevContact,
+            [name]: value,
+        }));
     };
 
-    const handleSaveContactChange = () => {
-        if (currentContact) {
-            setContacts((prevContacts) =>
-                prevContacts.map((contact) =>
-                    contact.id === currentContact.id ? { ...contact, ...currentContact } : contact
-                )
-            );
-        }
-        handleClose();
-        alert('Thông tin liên hệ đã được cập nhật!');
-    };
 
-    const handleSaveResponse = () => {
-        if (currentContact) {
-            setContacts((prevContacts) =>
-                prevContacts.map((contact) =>
-                    contact.id === currentContact.id ? {
-                        ...contact,
-                        response: currentContact.response,
-                        status: 'Đã phản hồi'
-                    } : contact
-                )
-            );
+    const handleSaveResponse = async () => {
+        try {
+            const response = await axios.put(`http://127.0.0.1:8000/api/contacts/${currentContact.id}`, {
+                response: currentContact.response, // Trường cần gửi
+            });
+    
+            if (response.status === 200) {
+                // Cập nhật danh sách liên hệ
+                setContacts((prevContacts) =>
+                    prevContacts.map((contact) =>
+                        contact.id === currentContact.id
+                            ? { ...contact, response: currentContact.response, status: 'replied' }
+                            : contact
+                    )
+                );
+                handleClose();
+                alert('Phản hồi đã được lưu thành công!');
+                fetchContacts();
+            }
+        } catch (error) {
+            console.error('Lỗi khi lưu phản hồi:', error);
+            alert('Có lỗi xảy ra, vui lòng thử lại.');
         }
-        handleClose();
-        alert('Phản hồi đã được lưu!');
     };
+    
+
 
     return (
         <>
@@ -122,6 +105,7 @@ const ContactsPage = () => {
                                 <th>Chủ đề liên hệ</th>
                                 <th>Nội dung</th>
                                 <th>Trạng thái</th>
+                                <th>Nội dung phản hồi</th>
                                 <th>Thao tác</th>
                             </tr>
                         </thead>
@@ -130,33 +114,40 @@ const ContactsPage = () => {
                                 contacts.map((contact, index) => (
                                     <tr key={contact.id}>
                                         <th scope="row">{index + 1}</th>
-                                        <td>{contact.createdAt}</td>
-                                        <td>{contact.customerName}</td>
-                                        <td>{contact.email}</td>
-                                        <td>{contact.address}</td>
-                                        <td>{contact.subject}</td>
+                                        <td>{contact.created_at}</td>
+                                        {/* Thông tin người dùng */}
+                                        <td>{contact.user ? contact.user.name : 'Không có tên'}</td>
+                                        <td>{contact.user ? contact.user.email : 'Không có email'}</td>
+                                        <td>{contact.user ? contact.user.address : 'Không có địa chỉ'}</td>
+                                        {/* Thông tin liên hệ */}
+                                        <td>{contact.title}</td>
                                         <td>{contact.message}</td>
                                         <td>
                                             <span
                                                 style={{
-                                                    color: contact.status === 'Đã phản hồi' ? 'green' : 'red',
-                                                    fontWeight: 'bold'
+                                                    color: contact.status === 1 ? 'green' : 'red',
+                                                    fontWeight: 'bold',
                                                 }}
                                             >
-                                                {contact.status}
+                                                {contact.status === 1 ? 'Đã phản hồi' : 'Chưa phản hồi'}
                                             </span>
                                         </td>
-
                                         <td>
-                                            <Button variant="info" onClick={() => handleEditContact(contact)}>
-                                                Cập Nhật
-                                            </Button>{' '}
-                                            {contact.status === 'Chưa phản hồi' && (
-                                                <Button variant="warning" onClick={() => handleResponseContact(contact)}>
+                                            {contact.response || 'Chưa có phản hồi'}
+                                        </td>
+                                        <td>
+                                            {contact.status !== 1 && (
+                                                <Button
+                                                    variant="warning"
+                                                    onClick={() => handleResponseContact(contact)}
+                                                >
                                                     Phản hồi
                                                 </Button>
-                                            )}{' '}
-                                            <Button variant="danger">
+                                            )}
+                                            <Button
+                                                variant="danger"
+                                                onClick={() => handleDeleteContact(contact.id)}
+                                            >
                                                 Xóa
                                             </Button>
                                         </td>
@@ -164,7 +155,7 @@ const ContactsPage = () => {
                                 ))
                             ) : (
                                 <tr>
-                                    <td colSpan="9" className="text-center">
+                                    <td colSpan="10" className="text-center">
                                         Không có liên hệ
                                     </td>
                                 </tr>
@@ -174,58 +165,10 @@ const ContactsPage = () => {
                 </Card.Body>
             </Card>
 
-            {/* Modal chỉnh sửa thông tin liên hệ */}
-            <Modal show={showModal} onHide={handleClose}>
-                <Modal.Header closeButton>
-                    <Modal.Title>Chỉnh sửa thông tin khách hàng</Modal.Title>
-                </Modal.Header>
-                <Modal.Body>
-                    {currentContact && (
-                        <Form>
-                            <Form.Group controlId="customerName">
-                                <Form.Label>Tên khách hàng</Form.Label>
-                                <Form.Control
-                                    type="text"
-                                    name="customerName"
-                                    value={currentContact.customerName}
-                                    onChange={handleInputChange}
-                                />
-                            </Form.Group>
-                            <Form.Group controlId="phone">
-                                <Form.Label>Số điện thoại</Form.Label>
-                                <Form.Control
-                                    type="text"
-                                    name="phone"
-                                    value={currentContact.phone}
-                                    onChange={handleInputChange}
-                                />
-                            </Form.Group>
-                            <Form.Group controlId="email">
-                                <Form.Label>Email</Form.Label>
-                                <Form.Control
-                                    type="email"
-                                    name="email"
-                                    value={currentContact.email}
-                                    onChange={handleInputChange}
-                                />
-                            </Form.Group>
-                        </Form>
-                    )}
-                </Modal.Body>
-                <Modal.Footer>
-                    <Button variant="secondary" onClick={handleClose}>
-                        Đóng
-                    </Button>
-                    <Button variant="primary" onClick={handleSaveContactChange}>
-                        Lưu thay đổi
-                    </Button>
-                </Modal.Footer>
-            </Modal>
-
             {/* Modal phản hồi */}
             <Modal show={showResponseModal} onHide={handleClose}>
                 <Modal.Header closeButton>
-                    <Modal.Title>Phản hồi khách hàng: {currentContact ? currentContact.customerName : ''}</Modal.Title>
+                    <Modal.Title>Phản hồi khách hàng: {currentContact?.user?.name}</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
                     {currentContact && (
@@ -235,7 +178,7 @@ const ContactsPage = () => {
                                 <Form.Control
                                     type="text"
                                     name="subject"
-                                    value={currentContact.subject}
+                                    value={currentContact.title}
                                     readOnly
                                 />
                             </Form.Group>
@@ -248,24 +191,16 @@ const ContactsPage = () => {
                                     readOnly
                                 />
                             </Form.Group>
-                            <Form.Group controlId="status">
-                                <Form.Label>Trạng thái</Form.Label>
-                                <Form.Control
-                                    type="text"
-                                    value={currentContact.status}
-                                    readOnly
-                                />
-                            </Form.Group>
                             <Form.Group controlId="response">
-                                <Form.Label>Phản hồi</Form.Label>
+                                <Form.Label>Phản hồi của bạn</Form.Label>
                                 <Form.Control
                                     as="textarea"
                                     name="response"
                                     value={currentContact.response || ''}
                                     onChange={handleInputChange}
-                                    placeholder="Nhập phản hồi ở đây..."
                                 />
                             </Form.Group>
+
                         </Form>
                     )}
                 </Modal.Body>
@@ -275,6 +210,24 @@ const ContactsPage = () => {
                     </Button>
                     <Button variant="primary" onClick={handleSaveResponse}>
                         Lưu phản hồi
+                    </Button>
+                </Modal.Footer>
+            </Modal>
+
+            {/* Modal xác nhận xóa */}
+            <Modal show={showDeleteModal} onHide={handleClose}>
+                <Modal.Header closeButton>
+                    <Modal.Title>Xác nhận xóa</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    <p>Bạn có chắc chắn muốn xóa liên hệ này không?</p>
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={handleClose}>
+                        Hủy
+                    </Button>
+                    <Button variant="danger" onClick={confirmDelete}>
+                        Xóa
                     </Button>
                 </Modal.Footer>
             </Modal>

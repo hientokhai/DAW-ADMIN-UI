@@ -131,16 +131,6 @@ const routes = [
         path: '/app/products/create',
         element: lazy(() => import('./views/pages/products/create'))
       },
-      {
-        exact: 'true',
-        path: '/app/comment/comment',
-        element: lazy(() => import('./views/pages/comment/comment'))
-      },
-      {
-        exact: 'true',
-        path: '/app/statistic/statistic',
-        element: lazy(() => import('./views/pages/statistic/statistic'))
-      },
       ///////
       {
         exact: 'true',
