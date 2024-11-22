@@ -2,55 +2,65 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Card, Button, ListGroup } from 'react-bootstrap';
 import { useState, useEffect } from 'react';
 import { formatCurrency } from 'formatCurrency';
+import OrderApi from 'api/orderApi';
 
 const OrderDetailPage = () => {
   const { orderId } = useParams(); // Lấy orderId từ URL
   const [order, setOrder] = useState(null);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    fetchOrderDetails(orderId);
-  }, [orderId]);
-
-  const fetchOrderDetails = (id) => {
-    const fakeOrders = [
-      {
-        id: 1,
-        createdAt: '11/12/2024',
-        customer: 'Khải Hiên',
-        phone_number: '0866508347',
-        address: 'abc street',
-        totalAmount: '525000',
-        paymentMethod: 'VNPay',
-        paymentStatus: 'Đã thanh toán',
-        orderStatus: 'Chờ xác nhận',
-        items: [
-          {
-            name: 'Áo thun',
-            quantity: 2,
-            price: 200000,
-            imageUrl: 'https://media3.coolmate.me/cdn-cgi/image/quality=80,format=auto/uploads/January2024/poloapl220.9.jpg'
-          },
-          {
-            name: 'Quần jeans',
-            quantity: 1,
-            price: 125000,
-            imageUrl:
-              'https://media3.coolmate.me/cdn-cgi/image/quality=80,format=auto/uploads/July2024/Quan_Jeans_Nam_sieu_nhe.xanh_dam.jpg'
-          }
-        ]
-      }
-    ];
-
-    // Lấy thông tin đơn hàng từ danh sách giả lập
-    const foundOrder = fakeOrders.find((order) => order.id === parseInt(id));
-    if (foundOrder) {
-      setOrder(foundOrder);
-    } else {
-      alert('Đơn hàng không tồn tại!');
-      navigate(-1); // Quay lại trang trước đó nếu không tìm thấy đơn hàng
+  const fetchOrderDetail = async () => {
+    try {
+      const response = await OrderApi.get(orderId);
+      setOrder(response.data);
+    } catch (error) {
+      console.log('fail', error);
     }
   };
+
+  useEffect(() => {
+    fetchOrderDetail();
+  }, [orderId]);
+
+  // const fetchOrderDetails = (id) => {
+  //   const fakeOrders = [
+  //     {
+  //       id: 1,
+  //       created_at: '11/12/2024',
+  //       customer: 'Khải Hiên',
+  //       phone_number: '0866508347',
+  //       address: 'abc street',
+  //       total_order_price: '525000',
+  //       payment_method: 'VNPay',
+  //       payment_status: 'Đã thanh toán',
+  //       order_status: 'Chờ xác nhận',
+  //       products: [
+  //         {
+  //           name: 'Áo thun',
+  //           quantity: 2,
+  //           price: 200000,
+  //           imageUrl: 'https://media3.coolmate.me/cdn-cgi/image/quality=80,format=auto/uploads/January2024/poloapl220.9.jpg'
+  //         },
+  //         {
+  //           name: 'Quần jeans',
+  //           quantity: 1,
+  //           price: 125000,
+  //           imageUrl:
+  //             'https://media3.coolmate.me/cdn-cgi/image/quality=80,format=auto/uploads/July2024/Quan_Jeans_Nam_sieu_nhe.xanh_dam.jpg'
+  //         }
+  //       ]
+  //     }
+  //   ];
+
+  //   // Lấy thông tin đơn hàng từ danh sách giả lập
+  //   const foundOrder = fakeOrders.find((order) => order.id === parseInt(id));
+  //   if (foundOrder) {
+  //     setOrder(foundOrder);
+  //   } else {
+  //     alert('Đơn hàng không tồn tại!');
+  //     navigate(-1); // Quay lại trang trước đó nếu không tìm thấy đơn hàng
+  //   }
+  // };
 
   return (
     <Card>
@@ -62,30 +72,37 @@ const OrderDetailPage = () => {
           <>
             <ListGroup variant="flush">
               <ListGroup.Item>
-                <strong>Ngày tạo:</strong> {order.createdAt}
+                <strong style={{ color: 'black' }}>Ngày tạo:</strong> {order.created_at}
               </ListGroup.Item>
               <ListGroup.Item>
-                <strong>Khách hàng:</strong> {order.customer} ({order.phone_number})
+                <strong style={{ color: 'black' }}>Khách hàng:</strong> {order.customer} ({order.phone_number})
               </ListGroup.Item>
               <ListGroup.Item>
-                <strong>Địa chỉ nhận hàng:</strong> {order.address}
+                <strong style={{ color: 'black' }}>Địa chỉ nhận hàng:</strong> {order.address}
               </ListGroup.Item>
               <ListGroup.Item>
-                <strong>Tổng đơn hàng:</strong> {formatCurrency(order.totalAmount)}
+                <strong style={{ color: 'black' }}>Tổng đơn hàng:</strong> {formatCurrency(order.total_order_price)}
               </ListGroup.Item>
               <ListGroup.Item>
-                <strong>Hình thức thanh toán:</strong> {order.paymentMethod}
+                <strong style={{ color: 'black' }}>Hình thức thanh toán:</strong> {order.payment_method}
               </ListGroup.Item>
               <ListGroup.Item>
-                <strong>Trạng thái thanh toán:</strong> {order.paymentStatus}
+                <strong style={{ color: 'black' }}>Trạng thái thanh toán:</strong> {order.payment_status}
               </ListGroup.Item>
               <ListGroup.Item>
-                <strong>Trạng thái đơn hàng:</strong> {order.orderStatus}
+                <strong style={{ color: 'black' }}>Trạng thái đơn hàng:</strong>{' '}
+                {order.order_status === 1
+                  ? 'Chờ xử lý'
+                  : order.order_status === 2
+                    ? 'Đang vận chuyển'
+                    : order.order_status === 3
+                      ? 'Đã giao'
+                      : 'Đã hủy'}
               </ListGroup.Item>
               <ListGroup.Item>
-                <strong>Sản phẩm:</strong>
+                <strong style={{ color: 'black' }}>Sản phẩm:</strong>
                 <ul>
-                  {order.items.map((item, index) => (
+                  {order.products.map((item, index) => (
                     <li key={index} style={{ display: 'flex', alignItems: 'center', marginBottom: '10px' }}>
                       <img
                         src={item.imageUrl}

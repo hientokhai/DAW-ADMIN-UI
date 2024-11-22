@@ -11,52 +11,6 @@ const OrderPage = () => {
 
   const navigate = useNavigate();
 
-  // useEffect(() => {
-  //   fetchOrders();
-  // }, []);
-
-  // const fetchOrders = () => {
-  //   const fakeData = [
-  //     {
-  //       id: 1,
-  //       createdAt: '11/12/2024',
-  //       customer: 'Khải Hiên',
-  //       totalAmount: '525000',
-  //       paymentMethod: 'VNPay',
-  //       paymentStatus: 'Đã thanh toán',
-  //       orderStatus: 'Chờ xác nhận'
-  //     },
-  //     {
-  //       id: 2,
-  //       createdAt: '10/12/2024',
-  //       customer: 'Nguyễn Văn A',
-  //       totalAmount: '730000',
-  //       paymentMethod: 'COD',
-  //       paymentStatus: 'Chưa thanh toán',
-  //       orderStatus: 'Đang vận chuyển'
-  //     },
-  //     {
-  //       id: 3,
-  //       createdAt: '10/12/2024',
-  //       customer: 'Nguyễn Văn B',
-  //       totalAmount: '730000',
-  //       paymentMethod: 'COD',
-  //       paymentStatus: 'Đã thanh toán',
-  //       orderStatus: 'Hoàn thành'
-  //     },
-  //     {
-  //       id: 4,
-  //       createdAt: '10/12/2024',
-  //       customer: 'Nguyễn Văn C',
-  //       totalAmount: '730000',
-  //       paymentMethod: 'COD',
-  //       paymentStatus: 'Chưa thanh toán',
-  //       orderStatus: 'Đã hủy'
-  //     }
-  //   ];
-  //   setOrders(fakeData);
-  // };
-
   const fetchOrderList = async () => {
     try {
       const response = await OrderApi.getAll();
@@ -75,12 +29,24 @@ const OrderPage = () => {
     setShowModal(true);
   };
 
-  const handleDeleteOrder = (orderId) => {
+  const handleDeleteOrder = async (orderId) => {
     // Xác nhận trước khi xóa
     const confirmDelete = window.confirm('Bạn có chắc chắn muốn xóa đơn hàng này?');
     if (confirmDelete) {
-      setOrders((prevOrders) => prevOrders.filter((order) => order.id !== orderId));
-      alert('Đơn hàng đã được xóa.');
+      try {
+        // Gọi API để xóa đơn hàng
+        const response = await OrderApi.deleteOrder(orderId);
+        if (response && response.status === 'success') {
+          // Cập nhật lại danh sách đơn hàng sau khi xóa
+          setOrders((prevOrders) => prevOrders.filter((order) => order.id !== orderId));
+          alert('Đơn hàng đã được xóa.');
+        } else {
+          alert('Không thể xóa đơn hàng.');
+        }
+      } catch (error) {
+        console.log('Lỗi khi xóa đơn hàng:', error);
+        alert('Đã xảy ra lỗi khi xóa đơn hàng.');
+      }
     }
   };
 
@@ -93,19 +59,30 @@ const OrderPage = () => {
     setCurrentOrder(null);
   };
 
-  const handleSaveStatusChange = () => {
+  const handleSaveStatusChange = async () => {
     if (currentOrder) {
-      setOrders((prevOrders) =>
-        prevOrders.map((order) => (order.id === currentOrder.id ? { ...order, orderStatus: currentOrder.orderStatus } : order))
-      );
+      try {
+        // Gọi API để cập nhật trạng thái đơn hàng
+        const response = await OrderApi.updateStatus(currentOrder.id, { order_status: currentOrder.order_status });
+        if (response && response.status === 'success') {
+          // Lấy dữ liệu mới từ server để đảm bảo cập nhật chính xác
+          await fetchOrderList(); // Gọi lại hàm lấy danh sách đơn hàng để cập nhật
+          alert('Trạng thái đơn hàng đã được cập nhật!');
+        } else {
+          alert('Không thể cập nhật trạng thái đơn hàng.');
+        }
+      } catch (error) {
+        console.log('Lỗi khi cập nhật trạng thái đơn hàng:', error);
+        alert('Đã xảy ra lỗi khi cập nhật trạng thái đơn hàng.');
+      }
     }
     handleClose();
-    alert('Trạng thái đơn hàng đã được cập nhật!');
   };
 
   const handleStatusChange = (e) => {
     if (currentOrder) {
-      setCurrentOrder({ ...currentOrder, orderStatus: e.target.value });
+      setCurrentOrder({ ...currentOrder, order_status: e.target.value });
+      console.log(currentOrder);
     }
   };
 
@@ -266,13 +243,13 @@ const OrderPage = () => {
             <Form>
               <Form.Group controlId="orderStatus">
                 <Form.Label>Trạng thái đơn hàng</Form.Label>
-                <Form.Control as="select" value={currentOrder.orderStatus} onChange={handleStatusChange}>
-                  <option disabled value="Chờ xử lý">
+                <Form.Control as="select" value={currentOrder.order_status} onChange={handleStatusChange}>
+                  <option disabled value="1">
                     Chờ xử lý
                   </option>
-                  <option value="Đang vận chuyển">Bàn giao vận chuyển</option>
-                  <option value="Đã giao">Giao thành công</option>
-                  <option value="Đã hủy">Hủy đơn hàng</option>
+                  <option value="2">Bàn giao vận chuyển</option>
+                  <option value="3">Giao thành công</option>
+                  <option value="4">Hủy đơn hàng</option>
                 </Form.Control>
               </Form.Group>
             </Form>
