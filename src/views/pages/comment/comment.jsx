@@ -1,51 +1,56 @@
 import React, { useState, useEffect } from 'react';
 import { Button, Card, Form, Modal, Table } from 'react-bootstrap';
+import CommentApi from '../../../api/commentApi';
 
 const CommentPage = () => {
   const [comments, setComments] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [selectedComment, setSelectedComment] = useState(null);
   const [newResponse, setNewResponse] = useState('');
-
-  const fetchComments = () => {
-    const fakeData = [
-      {
-        id: 1,
-        customerName: 'Hiên',
-        customerPhone: '0866508347',
-        customerEmail: 'hien@gmail.com',
-        productName: 'Áo thun ABCCCCC',
-        size: 'M',
-        color: 'Nâu',
-        image: 'https://media3.coolmate.me/cdn-cgi/image/quality=80,format=auto/uploads/January2024/poloapl220.9.jpg',
-        comment: 'Áo rất đẹp, mặc thoáng mát, tôn dáng!',
-        stars: 5,
-        status: 'Chờ duyệt',
-        response: 'Shop cảm ơn quý khách rất nhiều ạ...'
-      },
-      {
-        id: 2,
-        customerName: 'Khải',
-        customerPhone: '0866508347',
-        customerEmail: 'hien@gmail.com',
-        productName: 'Áo thun ABCCCCC',
-        size: 'M',
-        color: 'Nâu',
-        image: 'https://media3.coolmate.me/cdn-cgi/image/quality=80,format=auto/uploads/January2024/poloapl220.9.jpg',
-        comment: 'Áo rất đẹp, mặc thoáng mát, tôn dáng!',
-        stars: 5,
-        status: 'Chờ duyệt',
-        response: ''
-      }
-    ];
-    setComments(fakeData);
+  //
+  // const fetchComments = () => {
+  //   const fakeData = [
+  //     {
+  //       id: 1,
+  //       customerName: 'Hiên',
+  //       customerPhone: '0866508347',
+  //       customerEmail: 'hien@gmail.com',
+  //       productName: 'Áo thun ABCCCCC',
+  //       size: 'M',
+  //       color: 'Nâu',
+  //       image: 'https://media3.coolmate.me/cdn-cgi/image/quality=80,format=auto/uploads/January2024/poloapl220.9.jpg',
+  //       comment: 'Áo rất đẹp, mặc thoáng mát, tôn dáng!',
+  //       stars: 5,
+  //       status: 'Chờ duyệt',
+  //       response: 'Shop cảm ơn quý khách rất nhiều ạ...'
+  //     },
+  //     {
+  //       id: 2,
+  //       customerName: 'Khải',
+  //       customerPhone: '0866508347',
+  //       customerEmail: 'hien@gmail.com',
+  //       productName: 'Áo thun ABCCCCC',
+  //       size: 'M',
+  //       color: 'Nâu',
+  //       image: 'https://media3.coolmate.me/cdn-cgi/image/quality=80,format=auto/uploads/January2024/poloapl220.9.jpg',
+  //       comment: 'Áo rất đẹp, mặc thoáng mát, tôn dáng!',
+  //       stars: 5,
+  //       status: 'Chờ duyệt',
+  //       response: ''
+  //     }
+  //   ];
+  //   setComments(fakeData);
+  // };
+  const fetchComments = async () => {
+    const reponse = await CommentApi.getAll();
+    setComments(reponse.data);
   };
 
   useEffect(() => {
     fetchComments();
   }, []);
 
-  const handleAccept = (id) => {
+  const handleAccept = ( comment ) => {
     setComments((prevComments) => prevComments.map((comment) => (comment.id === id ? { ...comment, status: 'Đã duyệt' } : comment)));
   };
 
@@ -96,6 +101,15 @@ const CommentPage = () => {
           textAlign: 'center',
           padding: '5px'
         };
+      case 'Đã xóa':
+        return {
+          border: '3px solid #28A745',
+          color: '#ff0011',
+          fontWeight: 'bold',
+          borderRadius: '20px',
+          textAlign: 'center',
+          padding: '5px'
+        };
       default:
         return {
           border: '3px solid #000000',
@@ -132,19 +146,19 @@ const CommentPage = () => {
                   <th scope="row">{index + 1}</th>
                   <td>
                     <ul>
-                      <li>{comment.customerName}</li>
-                      <li>{comment.customerPhone}</li>
-                      <li>{comment.customerEmail}</li>
+                      <li>{comment.user.name}</li>
+                      <li>{comment.user.phone_number}</li>
+                      <li>{comment.user.email}</li>
                     </ul>
                   </td>
                   <td>
                     <ul>
                       <li style={{ marginBottom: '10px' }}>
-                        <img src={comment.image} alt="product" style={{ width: '30px' }} /> {comment.productName} - ({comment.size}/{' '}
-                        {comment.color})
+                        <img src={comment.product_variant.product.images[0].image_url} alt="product" style={{ width: '30px' }} /> {comment.product_variant.product.name} - ({comment.product_variant.size.size_name}/{' '}
+                        {comment.product_variant.color.color_name})
                       </li>
-                      <li style={{ marginBottom: '10px' }}>Đánh giá: {comment.stars}⭐</li>
-                      <li>Bình luận: {comment.comment}</li>
+                      <li style={{ marginBottom: '10px' }}>Đánh giá: {comment.rating}⭐</li>
+                      <li>Bình luận: {comment.comment_text}</li>
                     </ul>
                   </td>
                   <td>

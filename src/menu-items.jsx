@@ -67,7 +67,7 @@ const menuItems = {
           title: 'Quản lý Thống kê',
           type: 'item',
           icon: 'feather icon-home',
-          url: '/app/dashboard/default'
+          url: '/app/statistic/statistic'
         }
       ]
     },

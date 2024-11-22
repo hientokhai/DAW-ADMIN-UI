@@ -178,6 +178,11 @@ const routes = [
         element: lazy(() => import('./views/extra/SamplePage'))
       },
       {
+        exact: true,
+        path: 'app/statistic/statistic',
+        element: lazy(() => import('./views/pages/statistic/statistic'))
+      },
+      {
         path: '*',
         exact: 'true',
         element: () => <Navigate to={BASE_URL} />
