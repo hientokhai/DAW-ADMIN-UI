@@ -1,3 +1,4 @@
+/* eslint-disable jsx-a11y/no-static-element-interactions */
 import React, { useState, useEffect } from 'react';
 import { Button, Card, Form, Table, InputGroup } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
@@ -5,26 +6,50 @@ import ProductApi from 'api/productApi';
 
 const ProductsPage = () => {
   const [products, setProducts] = useState([]);
-  const [searchTerm, setSearchTerm] = useState('');
+  // const [showModal, setShowModal] = useState(false);
+  // const [currentProduct, setCurrentProduct] = useState(null);
+  // const [searchTerm, setSearchTerm] = useState('');
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [expandedProductId, setExpandedProductId] = useState(null);
+  const [sizes, setSizes] = useState([]);
   const navigate = useNavigate();
 
-  // Fetch initial product data
+  const [searchParams, setSearchParams] = useState('');
+
+  const handleInputChange = (e) => {
+    const { value } = e.target;
+    setSearchParams(value);
+  };
+
+  const handleSearch = async () => {
+    try {
+      const response = await ProductApi.search(searchParams);
+      setFilteredProducts(response.data);
+    } catch (err) {
+      alert('Lỗi tìm kiếm');
+    }
+  };
+
   useEffect(() => {
     fetchProducts();
+    fetchSizes();
   }, []);
 
-  useEffect(() => {
-    handleSearch(searchTerm);
-  }, [products, searchTerm]);
-
+  // Fetch dữ liệu kích thước từ API
+  const fetchSizes = async () => {
+    try {
+      const response = await ProductApi.getSizes(); // Giả sử API trả về một danh sách các kích thước
+      setSizes(response.data);
+    } catch (error) {
+      console.error('Lỗi khi lấy danh sách kích thước:', error);
+    }
+  };
   const fetchProducts = async () => {
     try {
       const response = await ProductApi.getAll();
       const productsData = response.data.map((product) => ({
         ...product,
-        product_variants: product.product_variants || [], // Ensure product_variants exists
+        product_variants: product.product_variants || [] // Ensure product_variants exists
       }));
       setProducts(productsData);
       setFilteredProducts(productsData);
@@ -33,16 +58,48 @@ const ProductsPage = () => {
     }
   };
 
-  const handleSearch = (term) => {
-    setSearchTerm(term);
-    if (!products.length) return;
-    if (term.trim() === '') {
-      setFilteredProducts(products);
+  const getSizeNameById = (sizeId) => {
+    const size = sizes.find((s) => s.id === sizeId);
+    return size ? size.size_name : 'Không xác định'; // Trả về tên size hoặc 'Không xác định' nếu không tìm thấy
+  };
+
+  // const fetchProductList = async () => {
+  //     try {
+  //       const response = await ProductApi.getAll();
+  //       setProducts(response.data);
+  //     } catch (error) {
+  //       console.log('fail', error);
+  //     }
+  //   };
+
+  //   useEffect(() => {
+  //     fetchProductList();
+  //   }, []);
+
+  // const handleSearch = (term) => {
+  //   setSearchTerm(term);
+  //   if (!products.length) return; // Nếu products rỗng, dừng tìm kiếm
+  //   if (term.trim() === '') {
+  //     setFilteredProducts(products);
+  //   } else {
+  //     const filtered = products.filter((product) => product.name.toLowerCase().includes(term.toLowerCase()));
+  //     setFilteredProducts(filtered);
+  //   }
+  // };
+
+  const handleDelete = async (id) => {
+    const userConfirmed = window.confirm('Bạn có chắc chắn muốn xóa sản phẩm này không?');
+
+    if (userConfirmed) {
+      try {
+        await ProductApi.delete(id);
+        alert('Xóa sản phẩm thành công!');
+        fetchProducts();
+      } catch (error) {
+        alert('Có lỗi xảy ra khi xóa.');
+      }
     } else {
-      const filtered = products.filter((product) =>
-        product.name.toLowerCase().includes(term.toLowerCase())
-      );
-      setFilteredProducts(filtered);
+      alert('Hủy thao tác xóa.');
     }
   };
 
@@ -55,50 +112,43 @@ const ProductsPage = () => {
       setExpandedProductId(null); // Thu gọn nếu đang mở
       return;
     }
-  
+
     try {
       const response = await ProductApi.getById(productId);
       const productDetails = response.data || {};
       const { product, sizes = [], colors = [] } = productDetails;
-  
-      if (!product || !Array.isArray(product.productVariants)) { //kiểm tra xem một giá trị có phải là một mảng (Array) hay không
-        console.error("Không tìm thấy thông tin sản phẩm hoặc variants không hợp lệ:", productDetails);
+
+      if (!product || !Array.isArray(product.productVariants)) {
+        //kiểm tra xem một giá trị có phải là một mảng (Array) hay không
+        console.error('Không tìm thấy thông tin sản phẩm hoặc variants không hợp lệ:', productDetails);
         return;
       }
-  
+
       // Gắn thêm thông tin tên size và màu sắc
       const updatedVariants = product.productVariants.map((variant) => ({
         ...variant,
-        size_name: sizes.find((size) => size.id === variant.size_id)?.size_name || "Không xác định",
-        color_name: colors.find((color) => color.id === variant.color_id)?.color_name || "Không xác định",
+        size_name: sizes.find((size) => size.id === variant.size_id)?.size_name || 'Không xác định',
+        color_name: colors.find((color) => color.id === variant.color_id)?.color_name || 'Không xác định'
       }));
-  
+
       // Cập nhật danh sách sản phẩm trong state
       setFilteredProducts((prevProducts) =>
-        prevProducts.map((product) =>
-          product.id === productId
-            ? { ...product, product_variants: updatedVariants }
-            : product
-        )
+        prevProducts.map((product) => (product.id === productId ? { ...product, product_variants: updatedVariants } : product))
       );
-  
+
       setExpandedProductId(productId); // Mở rộng chi tiết sản phẩm
     } catch (error) {
-      console.error("Lỗi khi lấy chi tiết sản phẩm:", error);
+      console.error('Lỗi khi lấy chi tiết sản phẩm:', error);
     }
   };
 
   return (
     <>
       <InputGroup className="mb-3">
-        <Button variant="dark" id="button-addon1" onClick={() => handleSearch(searchTerm)}>
+        <Form.Control placeholder="Nhập vào từ khóa tìm kiếm" value={searchParams} onChange={handleInputChange} />
+        <Button variant="dark" id="button-addon1" onClick={handleSearch}>
           Tìm kiếm
         </Button>
-        <Form.Control
-          placeholder="Nhập vào từ khóa tìm kiếm"
-          value={searchTerm}
-          onChange={(e) => handleSearch(e.target.value)}
-        />
       </InputGroup>
 
       <Card>
@@ -122,7 +172,7 @@ const ProductsPage = () => {
               </tr>
             </thead>
             <tbody>
-              {filteredProducts.length > 0 ? (
+              {filteredProducts?.length > 0 ? (
                 filteredProducts.map((product, index) => (
                   <React.Fragment key={product.id}>
                     <tr>
@@ -130,23 +180,20 @@ const ProductsPage = () => {
                       <td>{product.createdAt}</td>
                       <td>
                         {product.images && product.images.length > 0 ? (
-                          <img
-                            src={product.images[0].image_url}
-                            alt={product.name}
-                            style={{ width: '50px', height: '50px' }}
-                          />
+                          <img src={product.images[0].image_url} alt={product.name} style={{ width: '50px', height: '50px' }} />
                         ) : (
                           'Không có ảnh'
                         )}
                       </td>
                       <td>{product.category_id}</td>
                       <td>
+                        {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events */}
                         <span
                           onClick={() => toggleVariants(product.id)}
                           style={{
                             cursor: 'pointer',
                             color: 'blue',
-                            textDecoration: 'underline',
+                            textDecoration: 'underline'
                           }}
                         >
                           {product.name}
@@ -157,11 +204,11 @@ const ProductsPage = () => {
                       <td>{product.sel_price}</td>
                       <td>{product.product_variants.length > 0 ? 'Còn hàng' : 'Hết hàng'}</td>
                       <td>
-                        <Button
-                          variant="info"
-                          onClick={() => navigate(`/app/products/update/${product.id}`)}
-                        >
+                        <Button variant="info" onClick={() => navigate(`/app/products/update/${product.id}`)}>
                           Cập Nhật
+                        </Button>
+                        <Button variant="danger" onClick={() => handleDelete(product.id)}>
+                          Xóa
                         </Button>
                       </td>
                     </tr>
@@ -176,7 +223,7 @@ const ProductsPage = () => {
                                 style={{
                                   width: '100%',
                                   border: '1px solid #ddd',
-                                  marginTop: '10px',
+                                  marginTop: '10px'
                                 }}
                               >
                                 <thead>
