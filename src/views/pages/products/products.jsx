@@ -1,126 +1,91 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button, Card, Form, Table, InputGroup } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import ProductApi from 'api/productApi';
 
 const ProductsPage = () => {
-    const [products, setProducts] = useState([]);
-    // const [showModal, setShowModal] = useState(false);
-    // const [currentProduct, setCurrentProduct] = useState(null);
-    const [searchTerm, setSearchTerm] = useState("");
-    const [filteredProducts, setFilteredProducts] = useState([]);
-    const [expandedProductId, setExpandedProductId] = useState(null);
-    const [sizes, setSizes] = useState([]);
-    const navigate = useNavigate();
-    useEffect(() => {
-        fetchProducts();
-        fetchSizes();
-    }, []);
+  const [products, setProducts] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filteredProducts, setFilteredProducts] = useState([]);
+  const [expandedProductId, setExpandedProductId] = useState(null);
+  const navigate = useNavigate();
+
+  // Fetch initial product data
+  useEffect(() => {
+    fetchProducts();
+  }, []);
 
   useEffect(() => {
     handleSearch(searchTerm);
   }, [products, searchTerm]);
 
-    // Fetch dữ liệu kích thước từ API
-    const fetchSizes = async () => {
-        try {
-            const response = await ProductApi.getSizes(); // Giả sử API trả về một danh sách các kích thước
-            setSizes(response.data);
-        } catch (error) {
-            console.error('Lỗi khi lấy danh sách kích thước:', error);
-        }
-    };
   const fetchProducts = async () => {
     try {
-      // Fetch sản phẩm
       const response = await ProductApi.getAll();
-      console.log('Dữ liệu sản phẩm:', response.data);
-      setProducts(response.data);
-      setFilteredProducts(response.data);
+      const productsData = response.data.map((product) => ({
+        ...product,
+        product_variants: product.product_variants || [], // Ensure product_variants exists
+      }));
+      setProducts(productsData);
+      setFilteredProducts(productsData);
     } catch (error) {
       console.error('Lỗi khi lấy danh sách sản phẩm:', error);
     }
   };
-    
-    const getSizeNameById = (sizeId) => {
-        const size = sizes.find((s) => s.id === sizeId);
-        return size ? size.size_name : 'Không xác định'; // Trả về tên size hoặc 'Không xác định' nếu không tìm thấy
-    };
-
-  // const fetchProductList = async () => {
-  //     try {
-  //       const response = await ProductApi.getAll();
-  //       setProducts(response.data);
-  //     } catch (error) {
-  //       console.log('fail', error);
-  //     }
-  //   };
-
-  //   useEffect(() => {
-  //     fetchProductList();
-  //   }, []);
 
   const handleSearch = (term) => {
     setSearchTerm(term);
-    if (!products.length) return; // Nếu products rỗng, dừng tìm kiếm
+    if (!products.length) return;
     if (term.trim() === '') {
       setFilteredProducts(products);
     } else {
-      const filtered = products.filter((product) => product.name.toLowerCase().includes(term.toLowerCase()));
+      const filtered = products.filter((product) =>
+        product.name.toLowerCase().includes(term.toLowerCase())
+      );
       setFilteredProducts(filtered);
     }
   };
 
-  // Hiển thị modal chỉnh sửa khi nhấn vào nút "Cập nhật"
-  // const handleEditProduct = (product) => {
-  //     setCurrentProduct(product);
-  //     setShowModal(true);
-  // };
-
-  // Xử lý đóng modal
-  // const handleClose = () => {
-  //     setShowModal(false);
-  //     setCurrentProduct(null);
-  // };
-
-  // Xử lý khi người dùng thay đổi thông tin sản phẩm trong modal
-  // const handleInputChange = (e, index = null, field = null) => {
-  //     const { value } = e.target;
-  //     if (index !== null && field) {
-  //         // Trường hợp cập nhật biến thể
-  //         const updatedVariants = currentProduct.variants.map((variant, idx) => {
-  //             if (idx === index) {
-  //                 return { ...variant, [field]: value };
-  //             }
-  //             return variant;
-  //         });
-  //         setCurrentProduct({ ...currentProduct, variants: updatedVariants });
-  //     } else {
-  //         // Trường hợp cập nhật các trường khác ngoài variants
-  //         const { name } = e.target;
-  //         setCurrentProduct({ ...currentProduct, [name]: value });
-  //     }
-  // };
-
-  // const handleSaveProductChange = () => {
-  //     if (currentProduct) {
-  //         setProducts((prevProducts) =>
-  //             prevProducts.map((product) =>
-  //                 product.id === currentProduct.id ? { ...product, ...currentProduct } : product
-  //             )
-  //         );
-  //     }
-  //     handleClose();
-  //     alert('Thông tin sản phẩm đã được cập nhật!');
-  // };
-
-  // Điều hướng sang trang thêm sản phẩm mới
   const handleAddProduct = () => {
-    navigate(`/app/products/addproducts`);
+    navigate('/app/products/addproducts');
   };
 
-  const toggleVariants = (productId) => {
-    setExpandedProductId((prev) => (prev === productId ? null : productId));
+  const toggleVariants = async (productId) => {
+    if (expandedProductId === productId) {
+      setExpandedProductId(null); // Thu gọn nếu đang mở
+      return;
+    }
+  
+    try {
+      const response = await ProductApi.getById(productId);
+      const productDetails = response.data || {};
+      const { product, sizes = [], colors = [] } = productDetails;
+  
+      if (!product || !Array.isArray(product.productVariants)) { //kiểm tra xem một giá trị có phải là một mảng (Array) hay không
+        console.error("Không tìm thấy thông tin sản phẩm hoặc variants không hợp lệ:", productDetails);
+        return;
+      }
+  
+      // Gắn thêm thông tin tên size và màu sắc
+      const updatedVariants = product.productVariants.map((variant) => ({
+        ...variant,
+        size_name: sizes.find((size) => size.id === variant.size_id)?.size_name || "Không xác định",
+        color_name: colors.find((color) => color.id === variant.color_id)?.color_name || "Không xác định",
+      }));
+  
+      // Cập nhật danh sách sản phẩm trong state
+      setFilteredProducts((prevProducts) =>
+        prevProducts.map((product) =>
+          product.id === productId
+            ? { ...product, product_variants: updatedVariants }
+            : product
+        )
+      );
+  
+      setExpandedProductId(productId); // Mở rộng chi tiết sản phẩm
+    } catch (error) {
+      console.error("Lỗi khi lấy chi tiết sản phẩm:", error);
+    }
   };
 
   return (
@@ -129,7 +94,11 @@ const ProductsPage = () => {
         <Button variant="dark" id="button-addon1" onClick={() => handleSearch(searchTerm)}>
           Tìm kiếm
         </Button>
-        <Form.Control placeholder="Nhập vào từ khóa tìm kiếm" value={searchTerm} onChange={(e) => handleSearch(e.target.value)} />
+        <Form.Control
+          placeholder="Nhập vào từ khóa tìm kiếm"
+          value={searchTerm}
+          onChange={(e) => handleSearch(e.target.value)}
+        />
       </InputGroup>
 
       <Card>
@@ -155,14 +124,14 @@ const ProductsPage = () => {
             <tbody>
               {filteredProducts.length > 0 ? (
                 filteredProducts.map((product, index) => (
-                  <>
-                    <tr key={product.id}>
+                  <React.Fragment key={product.id}>
+                    <tr>
                       <td>{index + 1}</td>
                       <td>{product.createdAt}</td>
                       <td>
                         {product.images && product.images.length > 0 ? (
                           <img
-                            src={product.images[0].image_url} // Lấy ảnh đầu tiên nếu có
+                            src={product.images[0].image_url}
                             alt={product.name}
                             style={{ width: '50px', height: '50px' }}
                           />
@@ -177,7 +146,7 @@ const ProductsPage = () => {
                           style={{
                             cursor: 'pointer',
                             color: 'blue',
-                            textDecoration: 'underline'
+                            textDecoration: 'underline',
                           }}
                         >
                           {product.name}
@@ -190,24 +159,28 @@ const ProductsPage = () => {
                       <td>
                         <Button
                           variant="info"
-                          onClick={() => navigate(`/app/products/update/${product.id}`)} // Điều hướng đến trang cập nhật sản phẩm
+                          onClick={() => navigate(`/app/products/update/${product.id}`)}
                         >
                           Cập Nhật
                         </Button>
                       </td>
                     </tr>
 
-                    {/* Table for product variants - shown when product name is clicked */}
                     {expandedProductId === product.id && (
                       <tr>
-                        <td colSpan="6">
+                        <td colSpan="10">
                           <div>
                             <h4>Danh sách sản phẩm:</h4>
                             {product.product_variants.length > 0 ? (
-                              <table style={{ width: '100%', border: '1px solid #ddd', marginTop: '10px' }}>
+                              <table
+                                style={{
+                                  width: '100%',
+                                  border: '1px solid #ddd',
+                                  marginTop: '10px',
+                                }}
+                              >
                                 <thead>
                                   <tr>
-                                    <th>ID</th>
                                     <th>Kích cỡ (Size)</th>
                                     <th>Màu sắc (Color)</th>
                                     <th>Số lượng tồn</th>
@@ -216,7 +189,6 @@ const ProductsPage = () => {
                                 <tbody>
                                   {product.product_variants.map((variant) => (
                                     <tr key={variant.id}>
-                                      <td>{variant.id}</td>
                                       <td>{variant.size_name}</td>
                                       <td>{variant.color_name}</td>
                                       <td>{variant.quantity}</td>
@@ -231,11 +203,11 @@ const ProductsPage = () => {
                         </td>
                       </tr>
                     )}
-                  </>
+                  </React.Fragment>
                 ))
               ) : (
                 <tr>
-                  <td colSpan="8" className="text-center">
+                  <td colSpan="10" className="text-center">
                     Không có sản phẩm
                   </td>
                 </tr>
@@ -247,75 +219,6 @@ const ProductsPage = () => {
       <Button variant="warning" onClick={handleAddProduct} className="mt-3">
         Thêm sản phẩm
       </Button>
-
-      {/* <Modal show={showModal} onHide={handleClose}>
-                <Modal.Header closeButton>
-                    <Modal.Title>Chỉnh sửa thông tin sản phẩm</Modal.Title>
-                </Modal.Header>
-                <Modal.Body>
-                    {currentProduct && (
-                        <Form>
-                            <Form.Group controlId="name">
-                                <Form.Label>Tên sản phẩm</Form.Label>
-                                <Form.Control
-                                    type="text"
-                                    name="name"
-                                    value={currentProduct.name}
-                                    onChange={handleInputChange}
-                                />
-                            </Form.Group>
-
-                            {
-                            currentProduct.variants.map((variant, index) => (
-                                <div key={index} style={{ borderBottom: '1px solid #ddd', paddingBottom: '10px', marginBottom: '10px' }}>
-                                    <Form.Group controlId={`color-${index}`}>
-                                    <Form.Label>Màu sắc</Form.Label>
-                                    <Form.Control
-                                        type="text"
-                                        value={variant.color}
-                                        onChange={(e) => handleInputChange(e, index, 'color')}
-                                    />
-                                </Form.Group>
-                                <Form.Group controlId={`size-${index}`}>
-                                    <Form.Label>Kích cỡ</Form.Label>
-                                    <Form.Control
-                                        type="text"
-                                        value={variant.size}
-                                        onChange={(e) => handleInputChange(e, index, 'size')}
-                                    />
-                                </Form.Group>
-                                <Form.Group controlId={`quantity-${index}`}>
-                                    <Form.Label>Số lượng</Form.Label>
-                                    <Form.Control
-                                        type="number"
-                                        value={variant.quantity}
-                                        onChange={(e) => handleInputChange(e, index, 'quantity')}
-                                    />
-                                </Form.Group>
-                                </div>
-                                ))
-                            }
-                                <Form.Group controlId="description">
-                                <Form.Label>Thông tin sản phẩm</Form.Label>
-                                <Form.Control
-                                    type="text"
-                                    name="description"
-                                    value={currentProduct.description}
-                                    onChange={handleInputChange}
-                                />
-                            </Form.Group>
-                        </Form>
-                    )}
-                </Modal.Body>
-                <Modal.Footer>
-                    <Button variant="secondary" onClick={handleClose}>
-                        Đóng
-                    </Button>
-                    <Button variant="primary" onClick={handleSaveProductChange}>
-                        Lưu thay đổi
-                    </Button>
-                </Modal.Footer>
-            </Modal> */}
     </>
   );
 };
