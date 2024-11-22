@@ -8,11 +8,11 @@ const ProductApi = {
 
   addProduct: async (data) => {
     return axios.post(`http://127.0.0.1:8000/api/products`, data, {
-        headers: {
-            'Content-Type': 'multipart/form-data', // Đảm bảo gửi dạng FormData
-        },
+      headers: {
+        'Content-Type': 'multipart/form-data', // Đảm bảo gửi dạng FormData
+      },
     });
-},
+  },
   getColors: (params) => {
     const url = 'http://127.0.0.1:8000/api/colors/';
     return axiosClient.get(url, { params });
@@ -41,6 +41,14 @@ const ProductApi = {
   update: (id, data, config = {}) => {
     const url = `http://127.0.0.1:8000/api/products/${id}`;
     return axiosClient.put(url, data, config);
+  },
+  delete: (id) => {
+    const url = `http://127.0.0.1:8000/api/products/destroy/${id}`;
+    return axiosClient.delete(url);
+  },
+  search: async (name) => {
+    const url = 'http://127.0.0.1:8000/api/products/search-product';
+    return axiosClient.post(url, { name });
   }
 };
 

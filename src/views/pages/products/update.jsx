@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Button, Form } from 'react-bootstrap';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import ProductApi from 'api/productApi';
 import axios from 'axios';
 
 const UpdateProductPage = () => {
   const { id } = useParams(); // Lấy ID sản phẩm từ URL
-  // const navigate = useNavigate();
+  const navigate = useNavigate();
 
   const [product, setProduct] = useState({
     name: '',
@@ -139,7 +139,7 @@ const UpdateProductPage = () => {
       });
 
       alert('Cập nhật sản phẩm thành công!');
-      // navigate(-1);
+      navigate('/app/products/products');
     } catch (error) {
       console.error('Error updating product:', error);
       if (error.response && error.response.data) {
