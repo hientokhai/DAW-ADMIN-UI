@@ -2,32 +2,23 @@ import React, { useState, useEffect } from 'react';
 import { Col, Card, Form, Row, Button, Alert } from 'react-bootstrap';
 import StatisticApi from '../../../api/statisticApi';
 
-const RevenueStats = () => {
+const StatisticPage = () => {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
-  const [stats, setStats] = useState({ total_revenue: 0, total_orders: 0 }); // Khởi tạo giá trị mặc định
+  const [stats, setStats] = useState({ total_revenue: 0, total_orders: 0 });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const fetchStats = async (params = {}) => {
+  const fetchStatistic = async ({ start_date = '', end_date = '' }) => {
     setLoading(true);
     try {
-      const response = await StatisticApi.getAll(params);
-      console.log('API Response:', response); // Log toàn bộ response từ API
-
-      if (response?.status === 'success') {
-        const data = response.data;
-        console.log('Parsed Data:', data); // Log dữ liệu đã parse
-        setStats(data); // Lưu dữ liệu vào state
-      } else {
-        console.error('Unexpected API response format');
-        setStats({ total_revenue: 0, total_orders: 0 });
-      }
-    } catch (err) {
-      console.error('API Error:', err);
-      setError('Có lỗi xảy ra khi lấy dữ liệu.');
-    } finally {
+      const response = await StatisticApi.getAll({ start_date, end_date });
+      setStats(response.data);
       setLoading(false);
+    } catch (error) {
+      setLoading(false);
+      setError('Không thể tải dữ liệu thống kê.');
+      console.log('Error fetching statistics:', error);
     }
   };
 
@@ -36,12 +27,12 @@ const RevenueStats = () => {
       setError('Ngày bắt đầu phải nhỏ hơn hoặc bằng ngày kết thúc.');
       return;
     }
-
-    fetchStats({ start_date: startDate, end_date: endDate });
+    setError(''); // Reset error message
+    fetchStatistic({ start_date: startDate, end_date: endDate });
   };
 
   useEffect(() => {
-    fetchStats(); // Load initial stats
+    fetchStatistic({}); // Load initial stats without filter
   }, []);
 
   return (
@@ -104,4 +95,4 @@ const RevenueStats = () => {
   );
 };
 
-export default RevenueStats;
+export default StatisticPage;

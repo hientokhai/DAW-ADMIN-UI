@@ -121,6 +121,26 @@ const routes = [
         path: '/app/products/addproducts',
         element: lazy(() => import('./views/pages/products/addproducts'))
       },
+      {
+        exact: 'true',
+        path: '/app/products/update/:id',
+        element: lazy(() => import('./views/pages/products/update'))
+      },
+      {
+        exact: 'true',
+        path: '/app/products/create',
+        element: lazy(() => import('./views/pages/products/create'))
+      },
+      {
+        exact: 'true',
+        path: '/app/comment/comment',
+        element: lazy(() => import('./views/pages/comment/comment'))
+      },
+      {
+        exact: 'true',
+        path: '/app/statistic/statistic',
+        element: lazy(() => import('./views/pages/statistic/statistic'))
+      },
       ///////
       {
         exact: 'true',
@@ -176,11 +196,6 @@ const routes = [
         exact: 'true',
         path: '/sample-page',
         element: lazy(() => import('./views/extra/SamplePage'))
-      },
-      {
-        exact: true,
-        path: 'app/statistic/statistic',
-        element: lazy(() => import('./views/pages/statistic/statistic'))
       },
       {
         path: '*',

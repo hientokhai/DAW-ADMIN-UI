@@ -7,7 +7,7 @@ const CommentPage = () => {
   const [showModal, setShowModal] = useState(false);
   const [selectedComment, setSelectedComment] = useState(null);
   const [newResponse, setNewResponse] = useState('');
-  //
+
   // const fetchComments = () => {
   //   const fakeData = [
   //     {
@@ -41,17 +41,26 @@ const CommentPage = () => {
   //   ];
   //   setComments(fakeData);
   // };
+
   const fetchComments = async () => {
-    const reponse = await CommentApi.getAll();
-    setComments(reponse.data);
+    try {
+      const response = await CommentApi.getAll();
+      setComments(response.data);
+      console.log(response.data);
+    } catch (error) {
+      console.log('fail', error);
+    }
   };
 
   useEffect(() => {
     fetchComments();
   }, []);
 
-  const handleAccept = ( comment ) => {
-    setComments((prevComments) => prevComments.map((comment) => (comment.id === id ? { ...comment, status: 'Đã duyệt' } : comment)));
+  const handleAccept = (id) => {
+    setComments((prevComments) => prevComments.map((comment) => (comment.id === id ? {
+      ...comment,
+      status: 'Đã duyệt'
+    } : comment)));
   };
 
   const handleRespond = (comment) => {
@@ -75,11 +84,25 @@ const CommentPage = () => {
   const handleSaveResponse = () => {
     if (selectedComment) {
       setComments((prevComments) =>
-        prevComments.map((comment) => (comment.id === selectedComment.id ? { ...comment, response: newResponse } : comment))
+        prevComments.map((comment) => (comment.id === selectedComment.id ? {
+          ...comment,
+          response: newResponse
+        } : comment))
       );
     }
     handleClose();
   };
+
+  const getStatusText = (status) => {
+    const statusMap = {
+      0: 'Chờ duyệt',
+      1: 'Đã duyệt',
+      2: 'Bị từ chối',
+    };
+
+    return statusMap[status] || 'Không xác định';
+  };
+
 
   const getStatusStyle = (status) => {
     switch (status) {
@@ -96,15 +119,6 @@ const CommentPage = () => {
         return {
           border: '3px solid #28A745',
           color: '#28A745',
-          fontWeight: 'bold',
-          borderRadius: '20px',
-          textAlign: 'center',
-          padding: '5px'
-        };
-      case 'Đã xóa':
-        return {
-          border: '3px solid #28A745',
-          color: '#ff0011',
           fontWeight: 'bold',
           borderRadius: '20px',
           textAlign: 'center',
@@ -131,57 +145,62 @@ const CommentPage = () => {
         <Card.Body>
           <Table responsive hover>
             <thead>
-              <tr>
-                <th>#</th>
-                <th>Khách hàng</th>
-                <th>Sản phẩm - Bình luận - đánh giá</th>
-                <th>Trạng thái</th>
-                <th>Phản hồi</th>
-                <th>Thao tác</th>
-              </tr>
+            <tr>
+              <th>#</th>
+              <th>Khách hàng</th>
+              <th>Sản phẩm - Bình luận - đánh giá</th>
+              <th>Trạng thái</th>
+              <th>Phản hồi</th>
+              <th>Thao tác</th>
+            </tr>
             </thead>
             <tbody>
-              {comments.map((comment, index) => (
-                <tr key={comment.id}>
-                  <th scope="row">{index + 1}</th>
-                  <td>
-                    <ul>
-                      <li>{comment.user.name}</li>
-                      <li>{comment.user.phone_number}</li>
-                      <li>{comment.user.email}</li>
-                    </ul>
-                  </td>
-                  <td>
-                    <ul>
-                      <li style={{ marginBottom: '10px' }}>
-                        <img src={comment.product_variant.product.images[0].image_url} alt="product" style={{ width: '30px' }} /> {comment.product_variant.product.name} - ({comment.product_variant.size.size_name}/{' '}
-                        {comment.product_variant.color.color_name})
-                      </li>
-                      <li style={{ marginBottom: '10px' }}>Đánh giá: {comment.rating}⭐</li>
-                      <li>Bình luận: {comment.comment_text}</li>
-                    </ul>
-                  </td>
-                  <td>
-                    <p style={getStatusStyle(comment.status)}>{comment.status}</p>
-                  </td>
-                  <td>{comment.response}</td>
-                  <td>
-                    {comment.status === 'Chờ duyệt' && (
-                      <Button style={{ width: '110px' }} variant="info" onClick={() => handleAccept(comment.id)}>
-                        Chấp nhận
-                      </Button>
-                    )}
-                    <br />
-                    <Button style={{ width: '110px' }} variant="warning" onClick={() => handleRespond(comment)}>
-                      Phản hồi
+            {comments.map((comment, index) => (
+              <tr key={comment.id}>
+                <th scope="row">{index + 1}</th>
+                <td>
+                  <ul>
+                    <li>{comment.user.name}</li>
+                    <li>{comment.user.phone_number}</li>
+                    <li>{comment.user.email}</li>
+                  </ul>
+                </td>
+                <td>
+                  <ul>
+                    <li style={{ marginBottom: '10px' }}>
+                      <img
+                        src={comment.product_variant.product.images[0].image_url}
+                        alt="product"
+                        style={{ width: '30px' }}
+                      />
+                      {comment.product_variant.product.name} - (
+                      {comment.product_variant?.size.size_name}/ {comment.product_variant.color.color_name})
+                    </li>
+                    <li style={{ marginBottom: '10px' }}>Đánh giá: {comment.rating}⭐</li>
+                    <li>Bình luận: {comment.comment_text}</li>
+                  </ul>
+                </td>
+                <td>
+                  <p style={getStatusStyle(comment.status)}>{getStatusText(comment.status)}</p>
+                </td>
+                <td>{comment.response}</td>
+                <td>
+                  {comment.status === 'Chờ duyệt' && (
+                    <Button style={{ width: '110px' }} variant="info" onClick={() => handleAccept(comment.id)}>
+                      Chấp nhận
                     </Button>
-                    <br />
-                    <Button style={{ width: '110px' }} variant="danger" onClick={() => handleDelete(comment.id)}>
-                      Xóa
-                    </Button>
-                  </td>
-                </tr>
-              ))}
+                  )}
+                  <br />
+                  <Button style={{ width: '110px' }} variant="warning" onClick={() => handleRespond(comment)}>
+                    Phản hồi
+                  </Button>
+                  <br />
+                  <Button style={{ width: '110px' }} variant="danger" onClick={() => handleDelete(comment.id)}>
+                    Xóa
+                  </Button>
+                </td>
+              </tr>
+            ))}
             </tbody>
           </Table>
         </Card.Body>
@@ -196,7 +215,8 @@ const CommentPage = () => {
           <Form>
             <Form.Group controlId="responseInput">
               <Form.Label>Phản hồi của bạn</Form.Label>
-              <Form.Control as="textarea" rows={3} value={newResponse} onChange={(e) => setNewResponse(e.target.value)} />
+              <Form.Control as="textarea" rows={3} value={newResponse}
+                            onChange={(e) => setNewResponse(e.target.value)} />
             </Form.Group>
           </Form>
         </Modal.Body>
