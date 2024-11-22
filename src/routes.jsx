@@ -126,6 +126,11 @@ const routes = [
         path: '/app/products/update/:id',
         element: lazy(() => import('./views/pages/products/update'))
       },
+      {
+        exact: 'true',
+        path: '/app/products/create',
+        element: lazy(() => import('./views/pages/products/create'))
+      },
       ///////
       {
         exact: 'true',
