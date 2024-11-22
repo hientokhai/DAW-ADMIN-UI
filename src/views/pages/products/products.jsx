@@ -104,7 +104,7 @@ const ProductsPage = () => {
   };
 
   const handleAddProduct = () => {
-    navigate('/app/products/addproducts');
+    navigate('/app/products/create');
   };
 
   const toggleVariants = async (productId) => {
