@@ -296,9 +296,6 @@ const CategoryManagement = () => {
 
 
 
-
-
-
 const SizeManagement = () => {
   const [sizes, setSizes] = useState([]);
   const [showSizeModal, setShowSizeModal] = useState(false);
