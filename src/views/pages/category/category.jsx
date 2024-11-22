@@ -105,7 +105,23 @@ const CategoryManagement = () => {
       setShowToast(true);
     }
   };
-
+  const handleToggleVisible = async (id) => {
+    try {
+      const updatedCategory = { ...categories.find(category => category.id === id), is_visible: !categories.find(category => category.id === id).is_visible };
+      await CategoryApi.update(id, updatedCategory); // Gọi API để cập nhật trạng thái
+      const updatedCategories = categories.map((category) =>
+        category.id === id ? updatedCategory : category
+      );
+      setCategories(updatedCategories);
+      setToastMessage('Cập nhật trạng thái danh mục thành công!');
+      setToastType('success');
+      setShowToast(true);
+    } catch (error) {
+      setToastMessage('Có lỗi xảy ra khi cập nhật trạng thái danh mục.');
+      setToastType('error');
+      setShowToast(true);
+    }
+  };
   const handleAdd = async () => {
     const slug = generateSlug(newCategory.name); // Tạo slug từ tên danh mục
     const categoryToAdd = { ...newCategory, slug }; // Thêm slug vào danh mục mới
@@ -145,6 +161,7 @@ const CategoryManagement = () => {
             <th>Tên</th>
             <th>Slug</th>
             <th>Danh mục cha</th>
+            <th>Trạng thái</th>
             <th>Hành động</th>
           </tr>
         </thead>
@@ -156,9 +173,16 @@ const CategoryManagement = () => {
               <td>{category.slug}</td>
               <td>{category.parent_id ? categories.find(cat => cat.id === category.parent_id)?.name : 'Không có'}</td>
               <td>
+                {category.is_visible ? '' : ''}
+                <Button variant={category.is_visible ? 'success' : 'secondary'} onClick={() => handleToggleVisible(category.id)}>
+                  {category.is_visible ? 'Đang Hoạt động' : 'Đã tắt'}
+                </Button>
+              </td>
+              <td>
                 <Button onClick={() => handleShow(category)}>Chỉnh sửa</Button>
                 <Button onClick={() => handleDelete(category.id)}>Xóa</Button>
               </td>
+
             </tr>
           ))}
         </tbody>
