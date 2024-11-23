@@ -40,7 +40,13 @@ const SiteSettingsPage = () => {
             [name]: value
         });
     };
-
+    const handleSave = () => {
+        const updatedCategories = categories.map(category =>
+            category.id === currentCategory.id ? currentCategory : category
+        );
+        setCategories(updatedCategories);
+        handleClose();
+    };
     const handleImageChange = (e, type) => {
         const file = e.target.files[0];
         if (file) {
@@ -60,8 +66,62 @@ const SiteSettingsPage = () => {
         alert('Thông tin website đã được cập nhật!');
         // console.log(siteInfo); // Hiển thị thông tin đã thay đổi trong console
         setIsEditing(false);
-         // Tắt chế độ sửa sau khi lưu
+        // Tắt chế độ sửa sau khi lưu
     };
+
+    // const uploadImageToCloudinary = async (file) => {
+    //     const cloudinaryURL = `https://api.cloudinary.com/v1_1/dqnv0g0wl/image/upload`;
+    //     const formData = new FormData();
+    //     formData.append('file', file);
+    //     formData.append('upload_preset', 'product_image');
+
+    //     try {
+    //         const response = await axios.post(cloudinaryURL, formData, {
+    //             headers: { 'Content-Type': 'multipart/form-data' }
+    //         });
+    //         return response.data.secure_url; // Trả về URL ảnh đã upload
+    //     } catch (error) {
+    //         console.error('Error uploading image:', error);
+    //         throw new Error('Failed to upload image');
+    //     }
+    // };
+    // const handleSubmit = async (e) => {
+    //     e.preventDefault();
+
+    //     // Tạo FormData
+    //     const formData = new FormData();
+
+    //     // Thêm các trường cơ bản vào FormData
+    //     formData.append('shop_name', siteInfo.shop_name);
+    //     formData.append('address', siteInfo.address);
+    //     formData.append('phone_number', siteInfo.phone_number);
+    //     formData.append('email', siteInfo.email);
+    //     formData.append('description', siteInfo.description);
+
+
+    //     // Upload hình ảnh lên Cloudinary nếu có
+    //     try {
+    //         const imageUrl = await uploadImageToCloudinary(image);
+    //         formData.append('logo_header', imageUrl);
+
+    //         // Gửi request cập nhật sản phẩm
+    //         await axios.post(`http://127.0.0.1:8000/api/site-info`, formData, {
+    //             headers: {
+    //                 'Content-Type': 'multipart/form-data'
+    //             }
+    //         });
+
+    //         alert('Cập nhật thông tin website thành công!');
+    //         navigate('/app/products/products');
+    //     } catch (error) {
+    //         console.error('Error updating product:', error);
+    //         if (error.response && error.response.data) {
+    //             alert(`Lỗi: ${error.response.data.message || 'Không thể cập nhật sản phẩm.'}`);
+    //         } else {
+    //             alert('Đã xảy ra lỗi khi kết nối đến server.');
+    //         }
+    //     }
+    // };
 
     const handleCancelChanges = () => {
         const confirmCancel = window.confirm('Bạn có chắc chắn muốn hủy thay đổi không?');
