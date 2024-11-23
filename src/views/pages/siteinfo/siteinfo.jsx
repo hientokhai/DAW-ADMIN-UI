@@ -26,7 +26,7 @@ const SiteSettingsPage = () => {
             .then((response) => {
                 // Cập nhật state với dữ liệu API
                 setSiteInfo(response.data.data);
-                console.log(response.data.data);
+                // console.log(response.data.data);
             })
             .catch((error) => {
                 console.error("Lỗi khi lấy dữ liệu API: ", error);
@@ -59,7 +59,8 @@ const SiteSettingsPage = () => {
         // Gửi thông tin cập nhật lên server (ví dụ thông qua PUT request)
         alert('Thông tin website đã được cập nhật!');
         // console.log(siteInfo); // Hiển thị thông tin đã thay đổi trong console
-        setIsEditing(false); // Tắt chế độ sửa sau khi lưu
+        setIsEditing(false);
+         // Tắt chế độ sửa sau khi lưu
     };
 
     const handleCancelChanges = () => {
@@ -160,68 +161,51 @@ const SiteSettingsPage = () => {
 
                             <Form.Group controlId="social_facebook">
                                 <Form.Label className="font-weight-bold">Facebook</Form.Label>
-                                {siteInfo.social_facebook && <img src={siteInfo.social_facebook} alt="Facebook" style={{ width: '101px', height: 'auto' }} />}
                                 <Form.Control
-                                    type="file"
-                                    onChange={(e) => handleImageChange(e, 'social_facebook')}
-                                    className="custom-file-input"
+                                    type="url"
+                                    name="social_facebook"
+                                    placeholder="Nhập URL Facebook"
+                                    value={siteInfo.social_facebook || ''}
+                                    onChange={handleInputChange}
                                     style={{ marginTop: '10px' }}
                                 />
-                                <div style={{ marginTop: '5px' }}></div>
-                            </Form.Group><Form.Group controlId="social_instagram">
+                            </Form.Group>
+
+                            <Form.Group controlId="social_instagram">
                                 <Form.Label className="font-weight-bold">Instagram</Form.Label>
-                                {siteInfo.social_instagram && (
-                                    <img
-                                        src={siteInfo.social_instagram}
-                                        alt="Instagram"
-                                        style={{ width: '100px', height: 'auto' }}
-                                    />
-                                )}
                                 <Form.Control
-                                    type="file"
-                                    onChange={(e) => handleImageChange(e, 'social_instagram')}
-                                    className="custom-file-input"
+                                    type="url"
+                                    name="social_instagram"
+                                    placeholder="Nhập URL Instagram"
+                                    value={siteInfo.social_instagram || ''}
+                                    onChange={handleInputChange}
                                     style={{ marginTop: '10px' }}
                                 />
-                                <div style={{ marginTop: '5px' }}></div>
                             </Form.Group>
 
                             <Form.Group controlId="social_twitter">
                                 <Form.Label className="font-weight-bold">Twitter</Form.Label>
-                                {siteInfo.social_twitter && (
-                                    <img
-                                        src={siteInfo.social_twitter}
-                                        alt="Twitter"
-                                        style={{ width: '100px', height: 'auto' }}
-                                    />
-                                )}
                                 <Form.Control
-                                    type="file"
-                                    onChange={(e) => handleImageChange(e, 'social_twitter')}
-                                    className="custom-file-input"
+                                    type="url"
+                                    name="social_twitter"
+                                    placeholder="Nhập URL Twitter"
+                                    value={siteInfo.social_twitter || ''}
+                                    onChange={handleInputChange}
                                     style={{ marginTop: '10px' }}
                                 />
-                                <div style={{ marginTop: '5px' }}></div>
                             </Form.Group>
 
                             <Form.Group controlId="social_linkedin">
                                 <Form.Label className="font-weight-bold">LinkedIn</Form.Label>
-                                {siteInfo.social_linkedin && (
-                                    <img
-                                        src={siteInfo.social_linkedin}
-                                        alt="LinkedIn"
-                                        style={{ width: '100px', height: 'auto' }}
-                                    />
-                                )}
                                 <Form.Control
-                                    type="file"
-                                    onChange={(e) => handleImageChange(e, 'social_linkedin')}
-                                    className="custom-file-input"
+                                    type="url"
+                                    name="social_linkedin"
+                                    placeholder="Nhập URL LinkedIn"
+                                    value={siteInfo.social_linkedin || ''}
+                                    onChange={handleInputChange}
                                     style={{ marginTop: '10px' }}
                                 />
-                                <div style={{ marginTop: '5px' }}></div>
                             </Form.Group>
-
 
                             <Button variant="primary" onClick={handleSaveChanges} className="custom-btn">
                                 Lưu thay đổi
@@ -261,44 +245,59 @@ const SiteSettingsPage = () => {
 
                             <p>
                                 <strong style={{ fontWeight: 'bold', color: '#333' }}>Logo Facebook:</strong>
-                                <img
-                                    src={siteInfo.social_facebook}
-                                    alt="Facebook"
-                                    className="custom-image"
-                                    style={{ width: '100px', height: 'auto', display: 'inline-block', marginLeft: '10px' }}
-                                />
+                                {siteInfo.social_facebook && (
+                                    <a
+                                        href={siteInfo.social_facebook}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        style={{ marginLeft: '10px', color: '#007bff', textDecoration: 'none' }}
+                                    >
+                                        {siteInfo.social_facebook}
+                                    </a>
+                                )}
                             </p>
+
                             <p>
                                 <strong style={{ fontWeight: 'bold', color: '#333' }}>Logo Instagram:</strong>
-                                <img
-                                    src={siteInfo.social_instagram}
-                                    alt="Instagram"
-                                    className="custom-image"
-                                    style={{ width: '100px', height: 'auto', display: 'inline-block', marginLeft: '10px' }}
-                                />
+                                {siteInfo.social_instagram && (
+                                    <a
+                                        href={siteInfo.social_instagram}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        style={{ marginLeft: '10px', color: '#007bff', textDecoration: 'none' }}
+                                    >
+                                        {siteInfo.social_instagram}
+                                    </a>
+                                )}
                             </p>
 
                             <p>
                                 <strong style={{ fontWeight: 'bold', color: '#333' }}>Logo Twitter:</strong>
-                                <img
-                                    src={siteInfo.social_twitter}
-                                    alt="Twitter"
-                                    className="custom-image"
-                                    style={{ width: '100px', height: 'auto', display: 'inline-block', marginLeft: '10px' }}
-                                />
+                                {siteInfo.social_twitter && (
+                                    <a
+                                        href={siteInfo.social_twitter}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        style={{ marginLeft: '10px', color: '#007bff', textDecoration: 'none' }}
+                                    >
+                                        {siteInfo.social_twitter}
+                                    </a>
+                                )}
                             </p>
 
                             <p>
                                 <strong style={{ fontWeight: 'bold', color: '#333' }}>Logo LinkedIn:</strong>
-                                <img
-                                    src={siteInfo.social_linkedin}
-                                    alt="LinkedIn"
-                                    className="custom-image"
-                                    style={{ width: '100px', height: 'auto', display: 'inline-block', marginLeft: '10px' }}
-                                />
+                                {siteInfo.social_linkedin && (
+                                    <a
+                                        href={siteInfo.social_linkedin}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        style={{ marginLeft: '10px', color: '#007bff', textDecoration: 'none' }}
+                                    >
+                                        {siteInfo.social_linkedin}
+                                    </a>
+                                )}
                             </p>
-
-
                             <Button variant="primary" onClick={() => setIsEditing(true)} className="custom-btn">
                                 Chỉnh sửa
                             </Button>
