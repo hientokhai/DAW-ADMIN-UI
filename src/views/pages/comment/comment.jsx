@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Button, Card, Form, Modal, Table } from 'react-bootstrap';
+import CommentApi from '../../../api/commentApi';
 
 const CommentPage = () => {
   const [comments, setComments] = useState([]);
@@ -7,38 +8,48 @@ const CommentPage = () => {
   const [selectedComment, setSelectedComment] = useState(null);
   const [newResponse, setNewResponse] = useState('');
 
-  const fetchComments = () => {
-    const fakeData = [
-      {
-        id: 1,
-        customerName: 'Hiên',
-        customerPhone: '0866508347',
-        customerEmail: 'hien@gmail.com',
-        productName: 'Áo thun ABCCCCC',
-        size: 'M',
-        color: 'Nâu',
-        image: 'https://media3.coolmate.me/cdn-cgi/image/quality=80,format=auto/uploads/January2024/poloapl220.9.jpg',
-        comment: 'Áo rất đẹp, mặc thoáng mát, tôn dáng!',
-        stars: 5,
-        status: 'Chờ duyệt',
-        response: 'Shop cảm ơn quý khách rất nhiều ạ...'
-      },
-      {
-        id: 2,
-        customerName: 'Khải',
-        customerPhone: '0866508347',
-        customerEmail: 'hien@gmail.com',
-        productName: 'Áo thun ABCCCCC',
-        size: 'M',
-        color: 'Nâu',
-        image: 'https://media3.coolmate.me/cdn-cgi/image/quality=80,format=auto/uploads/January2024/poloapl220.9.jpg',
-        comment: 'Áo rất đẹp, mặc thoáng mát, tôn dáng!',
-        stars: 5,
-        status: 'Chờ duyệt',
-        response: ''
-      }
-    ];
-    setComments(fakeData);
+  // const fetchComments = () => {
+  //   const fakeData = [
+  //     {
+  //       id: 1,
+  //       customerName: 'Hiên',
+  //       customerPhone: '0866508347',
+  //       customerEmail: 'hien@gmail.com',
+  //       productName: 'Áo thun ABCCCCC',
+  //       size: 'M',
+  //       color: 'Nâu',
+  //       image: 'https://media3.coolmate.me/cdn-cgi/image/quality=80,format=auto/uploads/January2024/poloapl220.9.jpg',
+  //       comment: 'Áo rất đẹp, mặc thoáng mát, tôn dáng!',
+  //       stars: 5,
+  //       status: 'Chờ duyệt',
+  //       response: 'Shop cảm ơn quý khách rất nhiều ạ...'
+  //     },
+  //     {
+  //       id: 2,
+  //       customerName: 'Khải',
+  //       customerPhone: '0866508347',
+  //       customerEmail: 'hien@gmail.com',
+  //       productName: 'Áo thun ABCCCCC',
+  //       size: 'M',
+  //       color: 'Nâu',
+  //       image: 'https://media3.coolmate.me/cdn-cgi/image/quality=80,format=auto/uploads/January2024/poloapl220.9.jpg',
+  //       comment: 'Áo rất đẹp, mặc thoáng mát, tôn dáng!',
+  //       stars: 5,
+  //       status: 'Chờ duyệt',
+  //       response: ''
+  //     }
+  //   ];
+  //   setComments(fakeData);
+  // };
+
+  const fetchComments = async () => {
+    try {
+      const response = await CommentApi.getAll();
+      setComments(response.data);
+      console.log(response.data);
+    } catch (error) {
+      console.log('fail', error);
+    }
   };
 
   useEffect(() => {
@@ -46,7 +57,10 @@ const CommentPage = () => {
   }, []);
 
   const handleAccept = (id) => {
-    setComments((prevComments) => prevComments.map((comment) => (comment.id === id ? { ...comment, status: 'Đã duyệt' } : comment)));
+    setComments((prevComments) => prevComments.map((comment) => (comment.id === id ? {
+      ...comment,
+      status: 'Đã duyệt'
+    } : comment)));
   };
 
   const handleRespond = (comment) => {
@@ -70,11 +84,25 @@ const CommentPage = () => {
   const handleSaveResponse = () => {
     if (selectedComment) {
       setComments((prevComments) =>
-        prevComments.map((comment) => (comment.id === selectedComment.id ? { ...comment, response: newResponse } : comment))
+        prevComments.map((comment) => (comment.id === selectedComment.id ? {
+          ...comment,
+          response: newResponse
+        } : comment))
       );
     }
     handleClose();
   };
+
+  const getStatusText = (status) => {
+    const statusMap = {
+      0: 'Chờ duyệt',
+      1: 'Đã duyệt',
+      2: 'Bị từ chối',
+    };
+
+    return statusMap[status] || 'Không xác định';
+  };
+
 
   const getStatusStyle = (status) => {
     switch (status) {
@@ -117,57 +145,62 @@ const CommentPage = () => {
         <Card.Body>
           <Table responsive hover>
             <thead>
-              <tr>
-                <th>#</th>
-                <th>Khách hàng</th>
-                <th>Sản phẩm - Bình luận - đánh giá</th>
-                <th>Trạng thái</th>
-                <th>Phản hồi</th>
-                <th>Thao tác</th>
-              </tr>
+            <tr>
+              <th>#</th>
+              <th>Khách hàng</th>
+              <th>Sản phẩm - Bình luận - đánh giá</th>
+              <th>Trạng thái</th>
+              <th>Phản hồi</th>
+              <th>Thao tác</th>
+            </tr>
             </thead>
             <tbody>
-              {comments.map((comment, index) => (
-                <tr key={comment.id}>
-                  <th scope="row">{index + 1}</th>
-                  <td>
-                    <ul>
-                      <li>{comment.customerName}</li>
-                      <li>{comment.customerPhone}</li>
-                      <li>{comment.customerEmail}</li>
-                    </ul>
-                  </td>
-                  <td>
-                    <ul>
-                      <li style={{ marginBottom: '10px' }}>
-                        <img src={comment.image} alt="product" style={{ width: '30px' }} /> {comment.productName} - ({comment.size}/{' '}
-                        {comment.color})
-                      </li>
-                      <li style={{ marginBottom: '10px' }}>Đánh giá: {comment.stars}⭐</li>
-                      <li>Bình luận: {comment.comment}</li>
-                    </ul>
-                  </td>
-                  <td>
-                    <p style={getStatusStyle(comment.status)}>{comment.status}</p>
-                  </td>
-                  <td>{comment.response}</td>
-                  <td>
-                    {comment.status === 'Chờ duyệt' && (
-                      <Button style={{ width: '110px' }} variant="info" onClick={() => handleAccept(comment.id)}>
-                        Chấp nhận
-                      </Button>
-                    )}
-                    <br />
-                    <Button style={{ width: '110px' }} variant="warning" onClick={() => handleRespond(comment)}>
-                      Phản hồi
+            {comments.map((comment, index) => (
+              <tr key={comment.id}>
+                <th scope="row">{index + 1}</th>
+                <td>
+                  <ul>
+                    <li>{comment.user.name}</li>
+                    <li>{comment.user.phone_number}</li>
+                    <li>{comment.user.email}</li>
+                  </ul>
+                </td>
+                <td>
+                  <ul>
+                    <li style={{ marginBottom: '10px' }}>
+                      <img
+                        src={comment.product_variant.product.images[0].image_url}
+                        alt="product"
+                        style={{ width: '30px' }}
+                      />
+                      {comment.product_variant.product.name} - (
+                      {comment.product_variant?.size.size_name}/ {comment.product_variant.color.color_name})
+                    </li>
+                    <li style={{ marginBottom: '10px' }}>Đánh giá: {comment.rating}⭐</li>
+                    <li>Bình luận: {comment.comment_text}</li>
+                  </ul>
+                </td>
+                <td>
+                  <p style={getStatusStyle(comment.status)}>{getStatusText(comment.status)}</p>
+                </td>
+                <td>{comment.response}</td>
+                <td>
+                  {comment.status === 'Chờ duyệt' && (
+                    <Button style={{ width: '110px' }} variant="info" onClick={() => handleAccept(comment.id)}>
+                      Chấp nhận
                     </Button>
-                    <br />
-                    <Button style={{ width: '110px' }} variant="danger" onClick={() => handleDelete(comment.id)}>
-                      Xóa
-                    </Button>
-                  </td>
-                </tr>
-              ))}
+                  )}
+                  <br />
+                  <Button style={{ width: '110px' }} variant="warning" onClick={() => handleRespond(comment)}>
+                    Phản hồi
+                  </Button>
+                  <br />
+                  <Button style={{ width: '110px' }} variant="danger" onClick={() => handleDelete(comment.id)}>
+                    Xóa
+                  </Button>
+                </td>
+              </tr>
+            ))}
             </tbody>
           </Table>
         </Card.Body>
@@ -182,7 +215,8 @@ const CommentPage = () => {
           <Form>
             <Form.Group controlId="responseInput">
               <Form.Label>Phản hồi của bạn</Form.Label>
-              <Form.Control as="textarea" rows={3} value={newResponse} onChange={(e) => setNewResponse(e.target.value)} />
+              <Form.Control as="textarea" rows={3} value={newResponse}
+                            onChange={(e) => setNewResponse(e.target.value)} />
             </Form.Group>
           </Form>
         </Modal.Body>
