@@ -50,9 +50,9 @@ const ProductApi = {
     const url = 'http://127.0.0.1:8000/api/products/search-product';
     return axiosClient.post(url, { name });
   },
-  getCategoriesAndVariants: async (name) => {
+  getCategoriesAndVariants: async () => {
     const url = 'http://127.0.0.1:8000/api/products/variant-list';
-    return axiosClient.get(url, { name });
+    return axiosClient.get(url);
   }
 };
 
