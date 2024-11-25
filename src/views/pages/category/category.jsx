@@ -2,8 +2,11 @@ import React, { useEffect, useState } from 'react';
 import { Modal, Button, Table, Form, Toast } from 'react-bootstrap';
 import CategoryApi from 'api/CategoryApi';
 import SizeApi from 'api/SizeApi';
+import ColorsApi from 'api/colorApi';
 // Hàm để chuyển đổi tên thành slug
 const generateSlug = (name) => {
+  if (typeof name !== 'string') return ''; // Kiểm tra đầu vào
+
   const accentsMap = {
     à: 'a', á: 'a', ả: 'a', ã: 'a', ạ: 'a',
     â: 'a', ầ: 'a', ấ: 'a', ẩ: 'a', ẫ: 'a', ậ: 'a',
@@ -19,14 +22,20 @@ const generateSlug = (name) => {
   };
 
   // Thay thế các ký tự có dấu bằng ký tự không dấu
-  const normalized = name.split('').map(char => accentsMap[char] || char).join('');
+  const normalized = name
+    .split('')
+    .map(char => accentsMap[char] || char) // Thay thế ký tự có dấu
+    .join(''); // Kết hợp lại thành chuỗi
 
   return normalized
     .toLowerCase()
+    .trim() // Xóa khoảng trắng ở đầu và cuối
     .replace(/\s+/g, '-') // Thay thế khoảng trắng (bao gồm nhiều khoảng trắng) bằng dấu gạch ngang
     .replace(/[^\w-]+/g, '') // Xóa các ký tự không hợp lệ
-    .replace(/-+/g, '-'); // Xóa các dấu gạch ngang liên tiếp
+    .replace(/-+/g, '-') // Xóa các dấu gạch ngang liên tiếp
+    .replace(/^-|-$/g, ''); // Xóa dấu gạch ngang ở đầu và cuối
 };
+
 
 const CategoryManagement = () => {
   const [categories, setCategories] = useState([]);
@@ -519,16 +528,26 @@ const SizeManagement = () => {
 
 
 const ColorManagement = () => {
-  const [colors, setColors] = useState([
-    { id: 1, name: 'Đỏ' },
-    { id: 2, name: 'Xanh' },
-    { id: 3, name: 'Vàng' }
-  ]);
-
+  const [colors, setColors] = useState([]);
   const [showColorModal, setShowColorModal] = useState(false);
   const [showAddColorModal, setShowAddColorModal] = useState(false);
   const [currentColor, setCurrentColor] = useState(null);
   const [newColor, setNewColor] = useState('');
+  const [newColorCode, setNewColorCode] = useState(''); // Thêm state cho mã màu
+
+  // Hàm để lấy màu sắc từ API khi component được mount
+  useEffect(() => {
+    const fetchColors = async () => {
+      try {
+        const response = await ColorsApi.getAll(); // Gọi API để lấy màu sắc
+        setColors(response.data); // Giả sử response.data chứa danh sách màu sắc
+      } catch (error) {
+        console.error("Error fetching colors:", error);
+      }
+    };
+
+    fetchColors();
+  }, []);
 
   const handleShowColor = (color) => {
     setCurrentColor(color);
@@ -549,22 +568,59 @@ const ColorManagement = () => {
     setNewColor('');
   };
 
-  const handleDeleteColor = (id) => {
-    setColors(colors.filter((color) => color.id !== id));
+  const handleDeleteColor = async (id) => {
+    if (window.confirm("Bạn có chắc chắn muốn xóa màu này không?")) {
+      try {
+        await ColorsApi.delete(id);
+        setColors(colors.filter((color) => color.id !== id));
+      } catch (error) {
+        console.error("Error deleting color:", error.response ? error.response.data : error.message);
+        alert("Đã xảy ra lỗi khi xóa màu sắc. Vui lòng thử lại.");
+      }
+    }
   };
 
-  const handleSaveColor = () => {
-    const updatedColors = colors.map((color) => (color.id === currentColor.id ? currentColor : color));
-    setColors(updatedColors);
-    handleCloseColor();
+  const handleSaveColor = async () => {
+    try {
+      // Gọi API để cập nhật màu sắc với cả tên và mã màu
+      const response = await ColorsApi.update(currentColor.id, {
+        color_name: currentColor.color_name,
+        color_code: currentColor.color_code // Gửi mã màu
+      });
+
+      if (response && response.data) {
+        // Cập nhật danh sách màu sắc trong state
+        const updatedColors = colors.map((color) =>
+          color.id === currentColor.id ? { ...color, color_name: response.data.color_name, color_code: response.data.color_code } : color
+        );
+        setColors(updatedColors);
+        handleCloseColor(); // Đóng modal
+      }
+    } catch (error) {
+      console.error("Error updating color:", error.response ? error.response.data : error.message);
+      alert("Đã xảy ra lỗi khi cập nhật màu sắc. Vui lòng thử lại.");
+    }
   };
 
-  const handleAddColor = () => {
-    const newId = colors.length > 0 ? Math.max(colors.map((c) => c.id)) + 1 : 1;
-    setColors([...colors, { id: newId, name: newColor }]);
-    handleCloseAddColor();
+  const handleAddColor = async () => {
+    const newColorData = {
+      color_name: newColor,
+      color_code: newColorCode // Thêm mã màu vào dữ liệu
+    };
+    try {
+      const response = await ColorsApi.create(newColorData);
+      if (response && response.data) {
+        setColors(prevColors => [
+          ...prevColors,
+          { id: response.data.id, color_name: newColor, color_code: newColorCode } // Thêm mã màu vào trạng thái
+        ]);
+        handleCloseAddColor();
+      }
+    } catch (error) {
+      console.error("Error adding color:", error.response ? error.response.data : error.message);
+      alert("Đã xảy ra lỗi khi thêm màu sắc. Vui lòng thử lại.");
+    }
   };
-
   return (
     <div>
       <h2>Quản lý Màu sắc</h2>
@@ -583,7 +639,7 @@ const ColorManagement = () => {
           {colors.map((color) => (
             <tr key={color.id}>
               <td>{color.id}</td>
-              <td>{color.name}</td>
+              <td>{color.color_name}</td>
               <td>
                 <Button variant="warning" onClick={() => handleShowColor(color)}>
                   Sửa
@@ -597,6 +653,7 @@ const ColorManagement = () => {
         </tbody>
       </Table>
 
+      {/* Modal Sửa Màu sắc */}
       <Modal show={showColorModal} onHide={handleCloseColor}>
         <Modal.Header closeButton>
           <Modal.Title>Sửa Màu sắc</Modal.Title>
@@ -608,8 +665,16 @@ const ColorManagement = () => {
                 <Form.Label>Tên Màu sắc</Form.Label>
                 <Form.Control
                   type="text"
-                  value={currentColor.name}
-                  onChange={(e) => setCurrentColor({ ...currentColor, name: e.target.value })}
+                  value={currentColor.color_name} // Sửa lại để lấy tên màu
+                  onChange={(e) => setCurrentColor({ ...currentColor, color_name: e.target.value })}
+                />
+              </Form.Group>
+              <Form.Group controlId="formColorCode">
+                <Form.Label>Mã Màu sắc</Form.Label>
+                <Form.Control
+                  type="text"
+                  value={currentColor.color_code} // Sửa lại để lấy mã màu
+                  onChange={(e) => setCurrentColor({ ...currentColor, color_code: e.target.value })}
                 />
               </Form.Group>
             </Form>
@@ -625,6 +690,7 @@ const ColorManagement = () => {
         </Modal.Footer>
       </Modal>
 
+      {/* Modal Thêm Màu sắc */}
       <Modal show={showAddColorModal} onHide={handleCloseAddColor}>
         <Modal.Header closeButton>
           <Modal.Title>Thêm Màu sắc</Modal.Title>
@@ -633,12 +699,23 @@ const ColorManagement = () => {
           <Form>
             <Form.Group controlId="formNewColorName">
               <Form.Label>Tên Màu sắc</Form.Label>
-              <Form.Control type="text" value={newColor} onChange={(e) => setNewColor(e.target.value)} />
+              <Form.Control
+                type="text"
+                value={newColor}
+                onChange={(e) => setNewColor(e.target.value)}
+              />
+            </Form.Group>
+            <Form.Group controlId="formNewColorCode">
+              <Form.Label>Mã Màu sắc</Form.Label>
+              <Form.Control
+                type="text"
+                value={newColorCode}
+                onChange={(e) => setNewColorCode(e.target.value)} // Cập nhật mã màu
+              />
             </Form.Group>
           </Form>
         </Modal.Body>
         <Modal.Footer>
-          <Button></Button>
           <Button variant="secondary" onClick={handleCloseAddColor}>
             Đóng
           </Button>
@@ -650,7 +727,6 @@ const ColorManagement = () => {
     </div>
   );
 };
-
 const AdminManagement = () => {
   return (
     <div>
