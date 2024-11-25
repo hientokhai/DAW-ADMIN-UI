@@ -54,7 +54,7 @@ const CreateProductPage = () => {
 
     // Hàm chuyển các ký tự có dấu thành không dấu
     const removeVietnameseTones = (str) => {
-      const accents = 'àáạảãâấầậẩẫăắằặẳẵèéẹẻẽêếềệểễìíịỉĩòóọỏõôốồộổỗơớờợởỡùúụủũưứừựửữỳýỵỷỹđ'.split('');
+      const accents = 'àáÁạảãâấầậẩẫăắằặẳẵèéẹẻẽêếềệểễìíịỉĩòóọỏõôốồộổỗơớờợởỡùúụủũưứừựửữỳýỵỷỹđ'.split('');
       const withoutAccents = 'aaaaaaaaaaaaaaaaaeeeeeeeeeeiiiiiioooooooooooooooouuuuuuuuuuuuyyyyyd'.split('');
       return str
         .split('')
