@@ -174,24 +174,62 @@ const CategoryManagement = () => {
             <th>Hành động</th>
           </tr>
         </thead>
+        {/* <Table striped bordered hover>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Tên</th>
+              <th>Slug</th>
+              <th>Danh mục cha</th>
+              <th>Trạng thái</th>
+              <th>Hành động</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredCategories.map((category) => (
+              <tr key={category.id}>
+                <td>{category.id}</td>
+                <td>{category.name}</td>
+                <td>{category.slug}</td>
+                <td>{category.parent_id ? categories.find((cat) => cat.id === category.parent_id)?.name : 'Không có'}</td>
+                <td>
+                  <Button variant={category.is_visible ? 'success' : 'secondary'} onClick={() => handleToggleVisible(category.id)}>
+                    {category.is_visible ? 'Đang Hoạt động' : 'Đã tắt'}
+                  </Button>
+                </td>
+                <td>
+                  <Button onClick={() => handleShow(category)}>Chỉnh sửa</Button>
+                  <Button onClick={() => handleDelete(category.id)}>Xóa</Button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </Table> */}
         <tbody>
-          {filteredCategories.map(category => (
+          {filteredCategories.map((category) => (
             <tr key={category.id}>
               <td>{category.id}</td>
               <td>{category.name}</td>
               <td>{category.slug}</td>
-              <td>{category.parent_id ? categories.find(cat => cat.id === category.parent_id)?.name : 'Không có'}</td>
+              <td>{category.parent_id ? categories.find((cat) => cat.id === category.parent_id)?.name : 'Không có'}</td>
+              {/* Chỉ hiển thị nút trạng thái nếu danh mục có parent_id */}
               <td>
-                {category.is_visible ? '' : ''}
-                <Button variant={category.is_visible ? 'success' : 'secondary'} onClick={() => handleToggleVisible(category.id)}>
-                  {category.is_visible ? 'Đang Hoạt động' : 'Đã tắt'}
-                </Button>
+                {category.parent_id !== null ? (
+                  <>
+                    {category.is_visible ? '' : ''}
+                    <Button variant={category.is_visible ? 'success' : 'secondary'} onClick={() => handleToggleVisible(category.id)}>
+                      {category.is_visible ? 'Đang Hoạt động' : 'Đã tắt'}
+                    </Button>
+                  </>
+                ) : (
+                  // Nếu là danh mục cha, hiển thị text "Không áp dụng"
+                  'Không áp dụng'
+                )}
               </td>
               <td>
                 <Button onClick={() => handleShow(category)}>Chỉnh sửa</Button>
                 <Button onClick={() => handleDelete(category.id)}>Xóa</Button>
               </td>
-
             </tr>
           ))}
         </tbody>
