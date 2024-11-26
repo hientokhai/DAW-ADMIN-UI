@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Row, Col, Card, Tabs, Tab } from 'react-bootstrap';
-import { Link } from 'react-router-dom';
-import avatar1 from '../../assets/images/user/avatar-1.jpg';
 import OrderApi from 'api/orderApi';
 import CustomerApi from 'api/customerApi'; // API mới để lấy danh sách khách hàng
 
 const DashDefault = () => {
     const [orders, setOrders] = useState([]);
+    const [filteredOrders, setFilteredOrders] = useState([]);
     const [totals, setTotals] = useState({
         "Chờ xử lý": 0,
         "Đang vận chuyển": 0,
@@ -30,6 +29,7 @@ const DashDefault = () => {
             const response = await OrderApi.getAll();
             console.log('Dữ liệu đơn hàng:', response.data);
             setOrders(response.data);
+            setFilteredOrders(response.data);
             // Tính tổng trạng thái đơn hàng
             const calculatedTotals = calculateOrderStatusTotals(response.data);
             setTotals(calculatedTotals);
@@ -134,6 +134,39 @@ const DashDefault = () => {
       setTotalCustomers(totalCustomers);
       setNewCustomersToday(newCustomersToday);
   };
+
+    const filterOrdersByDate = (filterType) => {
+        const today = new Date().toISOString().split('T')[0];
+        const startOfWeek = new Date();
+        startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay()); // Lấy ngày đầu tuần (Chủ nhật)
+
+        let filteredOrders = [];
+
+        switch (filterType) {
+            case 'today':
+                filteredOrders = orders.filter(order => {
+                    const orderDate = new Date(order.created_at);
+                    return !isNaN(orderDate) && orderDate.toISOString().split('T')[0] === today;
+                });
+                break;
+            case 'week':
+                filteredOrders = orders.filter(order => {
+                    const orderDate = new Date(order.created_at);
+                    return !isNaN(orderDate) && orderDate >= startOfWeek;
+                });
+                break;
+            case 'all':
+                filteredOrders = orders;
+                break;
+            default:
+                filteredOrders = orders;
+        }
+
+        setFilteredOrders(filteredOrders);  // Đảm bảo cập nhật lại state
+        const calculatedTotals = calculateOrderStatusTotals(filteredOrders); // Cập nhật lại tổng trạng thái
+        setTotals(calculatedTotals);
+    };
+    
     const orderStats = [
         { title: 'Đơn hàng chờ xử lý', value: totals["Chờ xử lý"], icon: 'hourglass', class: 'bg-warning' },
         { title: 'Đơn hàng đang vận chuyển', value: totals["Đang vận chuyển"], icon: 'truck', class: 'bg-info' },
@@ -145,27 +178,6 @@ const DashDefault = () => {
         { title: 'Tổng số khách hàng', value: totalCustomers },
         { title: 'Khách hàng mới hôm nay', value: newCustomersToday },
     ];
-
-    const tabContent = (
-        <React.Fragment>
-            {orderStats.map((data, index) => (
-                <div className="d-flex friendlist-box align-items-center justify-content-center m-b-20" key={index}>
-                    <div className="m-r-10 photo-table flex-shrink-0">
-                        <Link to="#">
-                            <img className="rounded-circle" style={{ width: '40px' }} src={avatar1} alt="activity-user" />
-                        </Link>
-                    </div>
-                    <div className="flex-grow-1 ms-3">
-                        <h6 className="m-0 d-inline">{data.title}</h6>
-                        <span className="float-end d-flex align-items-center">
-                            <i className={`fa fa-caret-up f-22 m-r-10 ${data.class}`} />
-                            {data.value}
-                        </span>
-                    </div>
-                </div>
-            ))}
-        </React.Fragment>
-    );
 
     return (
         <React.Fragment>
@@ -209,21 +221,43 @@ const DashDefault = () => {
                         </Card.Body>
                     </Card>
                 </Col>
-                <Col md={12} xl={8} className="user-activity">
-                    <Card>
-                        <Tabs defaultActiveKey="today" id="uncontrolled-tab-example">
-                            <Tab eventKey="today" title="Hôm nay">
-                                {tabContent}
-                            </Tab>
-                            <Tab eventKey="week" title="Tuần này">
-                                {tabContent}
-                            </Tab>
-              <Tab eventKey="all" title="Tất cả">
-                {tabContent}
-              </Tab>
+                <Col md={12} xl={12}>
+                <Tabs defaultActiveKey="today" id="uncontrolled-tab-example">
+                <Tab eventKey="today" title="Hôm nay" onClick={() => filterOrdersByDate('today')}>
+                    {/* Hiển thị đơn hàng hôm nay */}
+                    <div>
+                        {filteredOrders.map((order, index) => (
+                            <div key={index}>
+                                {/* Hiển thị thông tin đơn hàng */}
+                                <p>{order.order_status} - {order.created_at}</p>
+                            </div>
+                        ))}
+                    </div>
+                </Tab>
+                <Tab eventKey="week" title="Tuần này" onClick={() => filterOrdersByDate('week')}>
+                    {/* Hiển thị đơn hàng tuần này */}
+                    <div>
+                        {filteredOrders.map((order, index) => (
+                            <div key={index}>
+                                {/* Hiển thị thông tin đơn hàng */}
+                                <p>{order.order_status} - {order.created_at}</p>
+                            </div>
+                        ))}
+                    </div>
+                </Tab>
+                <Tab eventKey="all" title="Tất cả" onClick={() => filterOrdersByDate('all')}>
+                    {/* Hiển thị tất cả đơn hàng */}
+                    <div>
+                        {filteredOrders.map((order, index) => (
+                            <div key={index}>
+                                {/* Hiển thị thông tin đơn hàng */}
+                                <p>{order.order_status} - {order.created_at}</p>
+                            </div>
+                        ))}
+                    </div>
+                </Tab>
             </Tabs>
-          </Card>
-        </Col>
+                </Col>
       </Row>
     </React.Fragment>
   );
