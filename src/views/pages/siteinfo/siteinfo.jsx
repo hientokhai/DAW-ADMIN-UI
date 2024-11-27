@@ -12,6 +12,9 @@ const SiteSettingsPage = () => {
         phone_number: '',
         email: '',
         description: '',
+        website: '',
+        business_area: '',
+        policies: '',
         logo_header_url: '',
         logo_footer_url: '',
         social_facebook: '',
@@ -194,6 +197,36 @@ const SiteSettingsPage = () => {
                                     className="custom-textarea"
                                 />
                             </Form.Group>
+                            <Form.Group controlId="description">
+                                <Form.Label className="font-weight-bold">Website</Form.Label>
+                                <Form.Control
+                                    as="textarea"
+                                    name="website"
+                                    value={siteInfo.website}
+                                    onChange={handleInputChange}
+                                    className="custom-textarea"
+                                />
+                            </Form.Group>
+                            <Form.Group controlId="description">
+                                <Form.Label className="font-weight-bold">business_area</Form.Label>
+                                <Form.Control
+                                    as="textarea"
+                                    name="business_area"
+                                    value={siteInfo.business_area}
+                                    onChange={handleInputChange}
+                                    className="custom-textarea"
+                                />
+                            </Form.Group>
+                            <Form.Group controlId="description">
+                                <Form.Label className="font-weight-bold">policies</Form.Label>
+                                <Form.Control
+                                    as="textarea"
+                                    name="policies"
+                                    value={siteInfo.policies}
+                                    onChange={handleInputChange}
+                                    className="custom-textarea"
+                                />
+                            </Form.Group>
 
                             <Form.Group controlId="logo_header_url">
                                 <Form.Label className="font-weight-bold">Logo Header</Form.Label>
@@ -282,6 +315,9 @@ const SiteSettingsPage = () => {
                             <p><strong style={{ fontWeight: 'bold', color: '#333' }}>Số điện thoại:</strong>{siteInfo.phone_number}</p>
                             <p><strong style={{ fontWeight: 'bold', color: '#333' }}>Email:</strong> {siteInfo.email}</p>
                             <p><strong style={{ fontWeight: 'bold', color: '#333' }}>Mô tả:</strong> {siteInfo.description}</p>
+                            <p><strong style={{ fontWeight: 'bold', color: '#333' }}>Trang web:</strong>{siteInfo.website}</p>
+                            <p><strong style={{ fontWeight: 'bold', color: '#333' }}>Hoạt động kinh doanh:</strong>{siteInfo.business_area}</p>
+                            <p><strong style={{ fontWeight: 'bold', color: '#333' }}>Chính sách:</strong>{siteInfo.policies}</p>
 
                             <p>
                                 <strong style={{ fontWeight: 'bold', color: '#333' }}>Logo Header:</strong>
