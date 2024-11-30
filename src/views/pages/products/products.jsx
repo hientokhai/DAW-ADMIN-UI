@@ -185,7 +185,7 @@ const ProductsPage = () => {
                           'Không có ảnh'
                         )}
                       </td>
-                      <td>{product.category.name}</td>
+                      <td>{product?.category?.name}</td>
                       <td>
                         {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events */}
                         <span
